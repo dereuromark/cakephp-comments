@@ -1,0 +1,71 @@
+<?php
+
+use Cake\Database\Connection;
+use Cake\Datasource\ConnectionManager;
+use Comments\CommentsPlugin;
+use TestApp\Controller\AppController;
+use TestApp\View\Helper\AppHelper;
+
+if (!defined('DS')) {
+	define('DS', DIRECTORY_SEPARATOR);
+}
+define('ROOT', dirname(__DIR__));
+define('APP_DIR', 'src');
+
+define('APP', rtrim(sys_get_temp_dir(), DS) . DS . APP_DIR . DS);
+if (!is_dir(APP)) {
+	mkdir(APP, 0770, true);
+}
+
+define('TMP', ROOT . DS . 'tmp' . DS);
+if (!is_dir(TMP)) {
+	mkdir(TMP, 0770, true);
+}
+define('CONFIG', ROOT . DS . 'config' . DS);
+define('TESTS', ROOT . DS . 'tests' . DS);
+
+define('LOGS', TMP . 'logs' . DS);
+define('CACHE', TMP . 'cache' . DS);
+
+define('CAKE_CORE_INCLUDE_PATH', ROOT . '/vendor/cakephp/cakephp');
+define('CORE_PATH', CAKE_CORE_INCLUDE_PATH . DS);
+define('CAKE', CORE_PATH . APP_DIR . DS);
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+require CORE_PATH . 'config/bootstrap.php';
+require CAKE . 'functions.php';
+
+class_alias(AppController::class, 'App\Controller\AppController');
+class_alias(AppHelper::class, 'App\View\Helper\AppHelper');
+
+Cake\Core\Configure::write('App', [
+	'namespace' => 'App',
+	'encoding' => 'utf-8',
+	'paths' => [
+		'templates' => [
+			ROOT . DS . 'templates' . DS,
+			ROOT . DS . 'tests' . DS . 'test_app' . DS . 'templates' . DS,
+		],
+	],
+]);
+
+Cake\Core\Configure::write('Comments', [
+]);
+
+Cake\Core\Configure::write('debug', true);
+
+Cake\Core\Plugin::getCollection()->add(new CommentsPlugin());
+
+ConnectionManager::setConfig('test', [
+	'className' => Connection::class,
+	'url' => getenv('DB_URL') ?: null,
+	'timezone' => 'UTC',
+	'quoteIdentifiers' => false,
+	'cacheMetadata' => true,
+]);
+/*
+// Manually in app migrations: Data, FileStorage
+(new \Migrations\TestSuite\Migrator())->runMany([
+	['connection' => 'test', 'plugin' => 'Comments'],
+]);
+*/
