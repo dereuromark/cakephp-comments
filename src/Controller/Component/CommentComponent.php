@@ -320,7 +320,10 @@ class CommentComponent extends Component {
 	 */
 	protected function addComment(array $data) {
 		/** @var \Cake\Datasource\EntityInterface $entity */
-		$entity = $this->Controller->viewBuilder()->getVar($this->viewVariable);
+		$entity = $this->Controller->viewBuilder()->getVar((string)$this->viewVariable);
+		if (!$entity) {
+			throw new RuntimeException('Entity missing for commmenting');
+		}
 
 		$options = [
 			'userId' => $this->userId(),
@@ -406,8 +409,8 @@ class CommentComponent extends Component {
 			throw new RuntimeException('CommentsComponent: model ' . $this->modelAlias . ' or association ' . $this->assocName . ' doesn\'t exist');
 		}
 
-		/** @var \Cake\Datasource\EntityInterface $entity */
-		$entity = $this->Controller->viewBuilder()->getVar($this->viewVariable);
+		/** @var \Cake\Datasource\EntityInterface|null $entity */
+		$entity = $this->Controller->viewBuilder()->getVar((string)$this->viewVariable);
 
 		if (!$entity || !$entity->get('id')) {
 			throw new RuntimeException('CommentsComponent: missing view variable ' . $this->viewVariable . ' or value for primary key ' . $primaryKey . ' of model ' . $this->modelAlias);
