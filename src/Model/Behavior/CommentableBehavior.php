@@ -240,10 +240,10 @@ class CommentableBehavior extends Behavior {
 	}
 
 	/**
-	 * @return \Comments\Model\Table\CommentsTable
+	 * @return \Comments\Model\Table\CommentsTable&\Cake\ORM\Association\HasMany
 	 */
-	protected function commentsTable(): CommentsTable {
-		/** @var \Comments\Model\Table\CommentsTable */
+	protected function commentsTable() {
+		/** @var \Comments\Model\Table\CommentsTable&\Cake\ORM\Association\HasMany */
 		return $this->_table->Comments;
 	}
 
