@@ -5,13 +5,28 @@ namespace Comments\Controller;
 use App\Controller\AppController;
 use Cake\Core\Configure;
 use Cake\Http\Exception\NotFoundException;
+use TinyAuth\Controller\Component\AuthComponent;
+use TinyAuth\Controller\Component\AuthUserComponent;
 
 /**
  * @property \Comments\Model\Table\CommentsTable $Comments
+ * @property \TinyAuth\Controller\Component\AuthUserComponent $AuthUser
+ * @property \TinyAuth\Controller\Component\AuthComponent $Auth
  */
 class CommentsController extends AppController {
 
 	protected ?string $modelClass = 'Comments.Comments';
+
+	/**
+	 * @return void
+	 */
+	public function initialize(): void {
+		parent::initialize();
+
+		if (class_exists(AuthUserComponent::class)) {
+			$this->loadComponent('TinyAuth.AuthUser');
+		}
+	}
 
 	/**
 	 * @param string|null $alias
@@ -31,7 +46,7 @@ class CommentsController extends AppController {
 		$entity = $table->get($id);
 
 		$data['model'] = $model;
-		$data['foreign_key'] = $entity->id;
+		$data['foreign_key'] = $entity->get('id');
 		$data['user_id'] = $this->userId();
 		$data['content'] = $data['comment'] ?? null;
 
@@ -59,12 +74,14 @@ class CommentsController extends AppController {
 	}
 
 	/**
+	 * @param int|null $id
+	 *
 	 * @return \Cake\Http\Response|null
 	 */
-	public function delete() {
+	public function delete($id = null) {
 		$this->request->allowMethod(['post', 'delete']);
 
-		$id = $this->request->getData('id');
+		$id = $this->request->getData('id') ?: $id;
 		$comment = $this->Comments->get($id);
 
 		$this->Comments->delete($comment);

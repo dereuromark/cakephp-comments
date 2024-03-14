@@ -39,15 +39,6 @@ class CommentsControllerTest extends TestCase {
 	}
 
 	/**
-	 * @uses \Comments\Controller\Admin\CommentsController::add()
-	 *
-	 * @return void
-	 */
-	public function testAdd(): void {
-		$this->markTestIncomplete('Not implemented yet.');
-	}
-
-	/**
 	 * @uses \Comments\Controller\Admin\CommentsController::edit()
 	 *
 	 * @return void

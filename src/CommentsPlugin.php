@@ -69,8 +69,6 @@ class CommentsPlugin extends BasePlugin {
 	 * @return \Cake\Http\MiddlewareQueue
 	 */
 	public function middleware(MiddlewareQueue $middlewareQueue): MiddlewareQueue {
-		// Add your middlewares here
-
 		return $middlewareQueue;
 	}
 
@@ -82,10 +80,6 @@ class CommentsPlugin extends BasePlugin {
 	 * @return \Cake\Console\CommandCollection
 	 */
 	public function console(CommandCollection $commands): CommandCollection {
-		// Add your commands here
-
-		$commands = parent::console($commands);
-
 		return $commands;
 	}
 

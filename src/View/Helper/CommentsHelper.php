@@ -2,14 +2,14 @@
 
 namespace Comments\View\Helper;
 
-use App\View\Helper\AppHelper;
 use Cake\Core\Configure;
 use Cake\Http\Exception\NotFoundException;
+use Cake\View\Helper;
 
 /**
  * @property \Cake\View\Helper\UrlHelper $Url
  */
-class CommentsHelper extends AppHelper {
+class CommentsHelper extends Helper {
 
 	/**
 	 * @var array

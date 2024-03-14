@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Comments\Test\TestCase\Controller;
 
+use Cake\Core\Configure;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
 
@@ -22,6 +23,8 @@ class CommentsControllerTest extends TestCase {
 	 */
 	protected array $fixtures = [
 		'plugin.Comments.Comments',
+		'plugin.Comments.Posts',
+		'plugin.Comments.Users',
 	];
 
 	/**
@@ -32,7 +35,19 @@ class CommentsControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testAdd(): void {
-		$this->markTestIncomplete('Not implemented yet.');
+		$this->disableErrorHandlerMiddleware();
+
+		Configure::write('Comments.controllerModels.Posts', 'Posts');
+
+		$data = [
+			'comment' => 'This is a test comment',
+		];
+
+		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 1], $data);
+
+		$this->assertRedirect(['action' => 'index']);
+
+		Configure::delete('Comments.controllerModels');
 	}
 
 	/**
@@ -43,7 +58,11 @@ class CommentsControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testDelete(): void {
-		$this->markTestIncomplete('Not implemented yet.');
+		$comment = $this->fetchTable('Comments.Comments')->find()->firstOrFail();
+
+		$this->delete(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', $comment->id]);
+
+		$this->assertRedirect(['action' => 'index']);
 	}
 
 }

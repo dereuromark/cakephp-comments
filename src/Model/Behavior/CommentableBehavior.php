@@ -8,6 +8,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\Table;
+use Comments\Model\Table\CommentsTable;
 
 class CommentableBehavior extends Behavior {
 
@@ -72,74 +73,76 @@ class CommentableBehavior extends Behavior {
 		]);
 
 		if ($this->getConfig('countComments')) {
-			$this->_table->Comments->addBehavior('CounterCache', [
+			$this->commentsTable()->addBehavior('CounterCache', [
 				$this->_table->getAlias() => [$this->getConfig('fieldCounter')],
 			]);
 		}
 
-		$this->_table->Comments->belongsTo($this->getConfig('modelClass'), [
+		$this->commentsTable()->belongsTo($this->getConfig('modelClass'), [
 			'className' => $this->getConfig('modelClass'),
 			'foreignKey' => 'foreign_key',
 		]);
 
 		if ($this->_table->getSchema()->getColumn('parent_id')) {
-			$this->_table->Comments->addBehavior('Tree');
+			$this->commentsTable()->addBehavior('Tree');
 		}
 
 		if (!empty($config['userModel']) && is_array($config['userModel'])) {
-			$this->_table->Comments->belongsTo($config['userModelAlias'], $config['userModel']);
+			$this->commentsTable()->belongsTo($config['userModelAlias'], $config['userModel']);
 		} else {
 			$userConfig = [
 				'className' => $this->getConfig('userModelClass'),
 				'foreignKey' => 'user_id',
 				//'counterCache' => true,
 			];
-			$this->_table->Comments->belongsTo($this->getConfig('userModelClass'), $userConfig);
+			$this->commentsTable()->belongsTo($this->getConfig('userModelClass'), $userConfig);
 		}
 	}
 
 	/**
 	 * Handle adding comments
 	 *
-	 * @param mixed $commentId parent comment id, 0 for none
+	 * @param int|null $commentId parent comment id, NULL for none
 	 * @param array $options extra information and comment statistics
 	 *
 	 * @throws \Cake\Http\Exception\MethodNotAllowedException
 	 *
 	 * @return bool|null
 	 */
-	public function commentAdd($commentId = null, array $options = []) {
-		$options += ['defaultTitle' => '', 'modelId' => null, 'userId' => null, 'data' => [], 'permalink' => ''];
+	public function commentAdd(?int $commentId = null, array $options = []) {
+		$options += ['defaultTitle' => '', 'model' => null, 'modelId' => null, 'userId' => null, 'data' => [], 'permalink' => ''];
 
 		if (isset($options['permalink'])) {
-			$this->_table->Comments->permalink = $options['permalink'];
+			//$this->commentsTable()->permalink = $options['permalink'];
 		}
 
-		$this->_table->Comments->recursive = -1;
 		if ($commentId) {
-			$this->_table->Comments->id = $commentId;
+			//$this->commentsTable()->id = $commentId;
 			if (
-				!$this->_table->Comments->find('count', [
-				'conditions' => [
-				'Comment.id' => $commentId,
-				'Comment.approved' => true,
-				'Comment.foreign_key' => $modelId]])
+				!$this->commentsTable()->find('all', [
+					'conditions' => [
+						'Comment.id' => $commentId,
+						'Comment.approved' => true,
+						'Comment.foreign_key' => $options['modelId'],
+					],
+				])->count()
 			) {
 				throw new MethodNotAllowedException(__d('comments', 'Unallowed comment id', true));
 			}
 		}
 
+		$data = $options['data'];
 		if ($data) {
-			$data['Comment']['user_id'] = $userId;
-			$data['Comment']['model'] = $modelName;
+			$data['Comment']['user_id'] = $options['userId'];
+			$data['Comment']['model'] = $options['model'];
 			if (!isset($data['Comment']['foreign_key'])) {
-				$data['Comment']['foreign_key'] = $modelId;
+				$data['Comment']['foreign_key'] = $options['modelId'];
 			}
 			if (!isset($data['Comment']['parent_id'])) {
 				$data['Comment']['parent_id'] = $commentId;
 			}
 			if (empty($data['Comment']['title'])) {
-				$data['Comment']['title'] = $defaultTitle;
+				$data['Comment']['title'] = $options['defaultTitle'];
 			}
 
 			if (!empty($data['Other'])) {
@@ -161,9 +164,9 @@ class CommentableBehavior extends Behavior {
             }
             */
 
-			$entity = $this->_table->Comments->newEntity($data);
+			$comment = $this->commentsTable()->newEntity($data);
 
-			if ($this->_table->Comments->Behaviors->enabled('Tree')) {
+			if ($this->commentsTable()->Behaviors->enabled('Tree')) {
 				if (isset($data['Comment']['foreign_key'])) {
 					$fk = $data['Comment']['foreign_key'];
 				} elseif (isset($data['foreign_key'])) {
@@ -171,19 +174,19 @@ class CommentableBehavior extends Behavior {
 				} else {
 					$fk = null;
 				}
-				$this->_table->Comments->Behaviors->load('Tree', [
+				$this->commentsTable()->Behaviors->load('Tree', [
 						'scope' => ['Comment.foreign_key' => $fk]]);
 			}
 
-			if ($this->_table->Comments->save()) {
-				$id = $this->_table->Comments->id;
-				$data['Comment']['id'] = $id;
-				$this->_table->Comments->data[$this->_table->Comments->alias]['id'] = $id;
+			if ($this->commentsTable()->save($comment)) {
+				$id = $comment->id;
+				//$data['Comment']['id'] = $id;
+				//$this->commentsTable()->data[$this->commentsTable()->alias]['id'] = $id;
 				if (!isset($data['Comment']['approved']) || $data['Comment']['approved'] == true) {
 					//$this->changeCommentCount($Model, $modelId);
 				}
 
-				//$event = new CakeEvent('Behavior.Commentable.afterCreateComment', $Model, $this->_table->Comments->data);
+				//$event = new CakeEvent('Behavior.Commentable.afterCreateComment', $Model, $this->commentsTable()->data);
 				//CakeEventManager::instance()->dispatch($event);
 				//if ($event->isStopped() && !$event->result) {
 				//    return false;
@@ -209,7 +212,7 @@ class CommentableBehavior extends Behavior {
 	public function findThreaded(SelectQuery $query, array $options = []): SelectQuery {
 		return $query->contain([
 			'Comments' => function (Query $q) use ($options) {
-				return $q->find('threaded');
+				return $q->find('threaded', $options);
 			},
 		]);
 	}
@@ -234,6 +237,14 @@ class CommentableBehavior extends Behavior {
 				return $q;
 			},
 		]);
+	}
+
+	/**
+	 * @return \Comments\Model\Table\CommentsTable
+	 */
+	protected function commentsTable(): CommentsTable {
+		/** @var \Comments\Model\Table\CommentsTable */
+		return $this->_table->Comments;
 	}
 
 }

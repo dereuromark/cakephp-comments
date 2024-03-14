@@ -1,60 +1,102 @@
 <?php
+declare(strict_types=1);
 
+use Cake\Cache\Cache;
+use Cake\Chronos\Chronos;
+use Cake\Core\Configure;
+use Cake\Core\Plugin;
 use Cake\Database\Connection;
 use Cake\Datasource\ConnectionManager;
+use Cake\TestSuite\Fixture\SchemaLoader;
 use Comments\CommentsPlugin;
 use TestApp\Controller\AppController;
-use TestApp\View\Helper\AppHelper;
 
 if (!defined('DS')) {
 	define('DS', DIRECTORY_SEPARATOR);
 }
-define('ROOT', dirname(__DIR__));
-define('APP_DIR', 'src');
-
-define('APP', rtrim(sys_get_temp_dir(), DS) . DS . APP_DIR . DS);
-if (!is_dir(APP)) {
-	mkdir(APP, 0770, true);
+if (!defined('WINDOWS')) {
+	if (DS === '\\' || substr(PHP_OS, 0, 3) === 'WIN') {
+		define('WINDOWS', true);
+	} else {
+		define('WINDOWS', false);
+	}
 }
 
-define('TMP', ROOT . DS . 'tmp' . DS);
-if (!is_dir(TMP)) {
-	mkdir(TMP, 0770, true);
-}
-define('CONFIG', ROOT . DS . 'config' . DS);
-define('TESTS', ROOT . DS . 'tests' . DS);
-
+define('PLUGIN_ROOT', dirname(__DIR__));
+define('ROOT', PLUGIN_ROOT . DS . 'tests' . DS . 'test_app');
+define('TMP', PLUGIN_ROOT . DS . 'tmp' . DS);
 define('LOGS', TMP . 'logs' . DS);
 define('CACHE', TMP . 'cache' . DS);
-
-define('CAKE_CORE_INCLUDE_PATH', ROOT . '/vendor/cakephp/cakephp');
+define('APP', ROOT . DS . 'src' . DS);
+define('APP_DIR', 'src');
+define('CAKE_CORE_INCLUDE_PATH', PLUGIN_ROOT . '/vendor/cakephp/cakephp');
 define('CORE_PATH', CAKE_CORE_INCLUDE_PATH . DS);
 define('CAKE', CORE_PATH . APP_DIR . DS);
 
-require dirname(__DIR__) . '/vendor/autoload.php';
+define('WWW_ROOT', PLUGIN_ROOT . DS . 'webroot' . DS);
+define('TESTS', __DIR__ . DS);
+define('CONFIG', TESTS . 'config' . DS);
+
+ini_set('intl.default_locale', 'de-DE');
+
+require PLUGIN_ROOT . '/vendor/autoload.php';
 require CORE_PATH . 'config/bootstrap.php';
 require CAKE . 'functions.php';
 
-class_alias(AppController::class, 'App\Controller\AppController');
-class_alias(AppHelper::class, 'App\View\Helper\AppHelper');
-
-Cake\Core\Configure::write('App', [
-	'namespace' => 'App',
-	'encoding' => 'utf-8',
+Configure::write('App', [
+	'namespace' => 'TestApp',
+	'encoding' => 'UTF-8',
 	'paths' => [
 		'templates' => [
-			ROOT . DS . 'templates' . DS,
-			ROOT . DS . 'tests' . DS . 'test_app' . DS . 'templates' . DS,
+			PLUGIN_ROOT . DS . 'tests' . DS . 'test_app' . DS . 'templates' . DS,
 		],
 	],
 ]);
 
-Cake\Core\Configure::write('Comments', [
+Configure::write('debug', true);
+
+$cache = [
+	'default' => [
+		'engine' => 'File',
+		'path' => CACHE,
+	],
+	'_cake_core_' => [
+		'className' => 'File',
+		'prefix' => 'crud_myapp_cake_core_',
+		'path' => CACHE . 'persistent/',
+		'serialize' => true,
+		'duration' => '+10 seconds',
+	],
+	'_cake_model_' => [
+		'className' => 'File',
+		'prefix' => 'crud_my_app_cake_model_',
+		'path' => CACHE . 'models/',
+		'serialize' => 'File',
+		'duration' => '+10 seconds',
+	],
+];
+
+Cache::setConfig($cache);
+
+class_alias(AppController::class, 'App\Controller\AppController');
+
+Configure::write('App', [
+	'namespace' => 'TestApp',
+	'encoding' => 'UTF-8',
+	'paths' => [
+		'templates' => [
+			PLUGIN_ROOT . DS . 'tests' . DS . 'test_app' . DS . 'templates' . DS,
+		],
+	],
 ]);
 
-Cake\Core\Configure::write('debug', true);
+Plugin::getCollection()->add(new CommentsPlugin());
 
-Cake\Core\Plugin::getCollection()->add(new CommentsPlugin());
+Chronos::setTestNow(Chronos::now());
+
+if (!getenv('DB_URL')) {
+	putenv('DB_URL=sqlite:///:memory:');
+}
 
 ConnectionManager::setConfig('test', [
 	'className' => Connection::class,
@@ -63,9 +105,14 @@ ConnectionManager::setConfig('test', [
 	'quoteIdentifiers' => false,
 	'cacheMetadata' => true,
 ]);
+
 /*
-// Manually in app migrations: Data, FileStorage
 (new \Migrations\TestSuite\Migrator())->runMany([
 	['connection' => 'test', 'plugin' => 'Comments'],
 ]);
 */
+
+if (env('FIXTURE_SCHEMA_METADATA')) {
+	$loader = new SchemaLoader();
+	$loader->loadInternalFile(env('FIXTURE_SCHEMA_METADATA'));
+}

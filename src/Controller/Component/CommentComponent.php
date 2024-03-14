@@ -71,7 +71,7 @@ class CommentComponent extends Component {
 	/**
 	 * Controller
 	 *
-	 * @var mixed|null $controller
+	 * @var \App\Controller\AppController
 	 */
 	protected $Controller;
 
@@ -80,7 +80,7 @@ class CommentComponent extends Component {
 	 *
 	 * Customizable in beforeFilter()
 	 *
-	 * @var array $actionNames
+	 * @var array<string>
 	 */
 	protected $actionNames = [
 		'view', 'comments',
@@ -95,18 +95,9 @@ class CommentComponent extends Component {
 	 *
 	 * Customizable in beforeFilter()
 	 *
-	 * @var array $deleteActions
+	 * @var array<string>
 	 */
 	protected $deleteActions = [];
-
-	/**
-	 * Name of 'commentable' model
-	 *
-	 * Customizable in beforeFilter(), or default controller's model name is used
-	 *
-	 * @var string|null Model name
-	 */
-	protected $modelName;
 
 	/**
 	 * Name of 'commentable' model
@@ -321,6 +312,8 @@ class CommentComponent extends Component {
 	}
 
 	/**
+	 * //FIXME
+	 *
 	 * @param array $data
 	 *
 	 * @return mixed
@@ -331,11 +324,14 @@ class CommentComponent extends Component {
 
 		$options = [
 			'userId' => $this->userId(),
-			'modelId' => $modelId,
+			'modelId' => $entity->get('id'),
 			'modelName' => $this->modelAlias,
 			'data' => $data,
 			//'permalink' => $permalink,
 		];
+
+		// Parent comment id
+		$commentId = $data['parent_id'] ?? null;
 		$result = $this->Controller->{$this->modelAlias}->commentAdd($commentId, $options);
 
 		return $result;
@@ -362,7 +358,7 @@ class CommentComponent extends Component {
 	 *
 	 * @return string Type of comment display
 	 */
-	public function callback_initType() {
+	public function callbackInitType() {
 		$types = ['flat', 'threaded', 'tree'];
 		$param = 'Comments.' . $this->modelAlias;
 		//dd($this->Controller->viewBuilder()->getVars());
@@ -377,6 +373,7 @@ class CommentComponent extends Component {
         }
         */
 
+		/*
 		if ($this->Controller->getRequest()->getCookieCollection()->has($param)) {
 			$type = $this->Controller->getRequest()->getCookieCollection()->get($param);
 			if (in_array($type, $types)) {
@@ -385,6 +382,7 @@ class CommentComponent extends Component {
 
 			$this->Controller->getRequest()->getCookieCollection()->remove('Comments');
 		}
+		*/
 
 		return 'flat';
 	}
@@ -399,7 +397,7 @@ class CommentComponent extends Component {
 	 *
 	 * @return void
 	 */
-	public function callback_view(string $displayType, bool $processActions = true) {
+	public function callbackView(string $displayType, bool $processActions = true) {
 		/** @var \Cake\ORM\Table $table */
 		$table = $this->Controller->{$this->modelAlias};
 		if (
@@ -438,7 +436,7 @@ class CommentComponent extends Component {
 	 *
 	 * @return array
 	 */
-	public function callback_fetchDataTree(array $options) {
+	public function callbackFetchDataTree(array $options) {
 		$settings = $this->_prepareModel($options);
 		$settings += ['order' => ['Comment.lft' => 'asc']];
 		$paginate = $settings;
@@ -465,7 +463,7 @@ class CommentComponent extends Component {
 	 *
 	 * @return array
 	 */
-	public function callback_fetchDataFlat(array $options) {
+	public function callbackFetchDataFlat(array $options) {
 		$paginate = []; //$this->_prepareModel($options);
 
 		$overloadPaginate = !empty($this->Controller->paginate['Comment']) ? $this->Controller->paginate['Comment'] : [];
@@ -484,7 +482,7 @@ class CommentComponent extends Component {
 	 *
 	 * @return array
 	 */
-	public function callback_fetchDataThreaded(array $options) {
+	public function callbackFetchDataThreaded(array $options) {
 		$Comment =&$this->Controller->{$this->modelAlias}->Comments;
 		$settings = $this->_prepareModel($options);
 		$settings['fields'] = [
@@ -514,8 +512,8 @@ class CommentComponent extends Component {
 	 *
 	 * @return array
 	 */
-	public function callback_fetchData($options) {
-		return $this->callback_fetchDataFlat($options);
+	public function callbackFetchData($options) {
+		return $this->callbackFetchDataFlat($options);
 	}
 
 	/**
@@ -540,7 +538,7 @@ class CommentComponent extends Component {
 	 *
 	 * @return void
 	 */
-	public function callback_prepareParams() {
+	public function callbackPrepareParams() {
 		$this->commentParams = [
 			'viewComments' => $this->viewComments,
 			'modelName' => $this->modelAlias,
@@ -567,7 +565,7 @@ class CommentComponent extends Component {
 	 *
 	 * @return void
 	 */
-	public function callback_add($modelId, $commentId, $displayType, $data = []) {
+	public function callbackAdd($modelId, $commentId, $displayType, $data = []) {
 		if (!empty($this->Controller->data)) {
 			$data['Comment']['body'] = $this->cleanHtml($this->Controller->data['Comment']['body']);
 			$modelName = $this->Controller->{$this->modelAlias}->alias;
@@ -627,7 +625,7 @@ class CommentComponent extends Component {
 	 *
 	 * @return string|null
 	 */
-	public function callback_getFormatedComment($commentId) {
+	public function callbackGetFormatedComment($commentId) {
 		$comment = $this->Controller->{$this->modelAlias}->Comments->find('first', [
 			'recursive' => -1,
 			'fields' => ['Comment.body', 'Comment.title'],
@@ -650,7 +648,7 @@ class CommentComponent extends Component {
 	 *
 	 * @return void
 	 */
-	public function callback_toggleApprove($modelId, $commentId) {
+	public function callbackToggleApprove($modelId, $commentId) {
 		if (
 			!isset($this->Controller->passedArgs['comment_action'])
 			|| !($this->Controller->passedArgs['comment_action'] == 'toggle_approve' && $this->Controller->Auth->user('is_admin') == true)
@@ -672,7 +670,7 @@ class CommentComponent extends Component {
 	 *
 	 * @return \Cake\Http\Response|null
 	 */
-	public function callback_delete($modelId, $commentId) {
+	public function callbackDelete($modelId, $commentId) {
 		if ($this->Controller->{$this->modelAlias}->commentDelete($commentId)) {
 			$this->flash(__d('comments', 'The Comment has been deleted.'));
 		} else {
@@ -765,8 +763,8 @@ class CommentComponent extends Component {
 	 * @return mixed
 	 */
 	protected function _call($method, $args = []) {
-		$methodName = 'callback_comments' . Inflector::camelize(Inflector::underscore($method));
-		$localMethodName = 'callback_' . $method;
+		$methodName = 'callbackComments' . Inflector::camelize(Inflector::underscore($method));
+		$localMethodName = 'callback' . $method;
 		if (method_exists($this->Controller, $methodName)) {
 			return call_user_func_array([$this->Controller, $methodName], $args);
 		}
@@ -780,11 +778,11 @@ class CommentComponent extends Component {
 	/**
 	 * Non view action process method
 	 *
-	 * @param array
+	 * @param array $options
 	 *
 	 * @return bool
 	 */
-	protected function _processActions($options) {
+	protected function _processActions(array $options) {
 		//extract($options);
 		if (isset($this->Controller->passedArgs['comment'])) {
 			if ($this->allowAnonymousComment || $this->Auth->user()) {
