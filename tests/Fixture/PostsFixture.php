@@ -16,8 +16,8 @@ class PostsFixture extends TestFixture {
     // phpcs:disable
     public array $fields = [
         'id' => ['type' => 'integer', 'length' => null, 'unsigned' => true, 'null' => false, 'default' => null, 'comment' => '', 'autoIncrement' => true, 'precision' => null],
-        'title' => ['type' => 'string', 'length' => 190, 'null' => false, 'default' => null, 'collate' => 'utf8mb4_unicode_ci', 'comment' => '', 'precision' => null],
-        'content' => ['type' => 'string', 'length' => 190, 'null' => true, 'default' => null, 'collate' => 'utf8mb4_unicode_ci', 'comment' => '', 'precision' => null],
+        'title' => ['type' => 'string', 'length' => 190, 'null' => false, 'default' => null, 'comment' => '', 'precision' => null],
+        'content' => ['type' => 'string', 'length' => 190, 'null' => true, 'default' => null, 'comment' => '', 'precision' => null],
         '_constraints' => [
             'primary' => ['type' => 'primary', 'columns' => ['id'], 'length' => []],
         ],

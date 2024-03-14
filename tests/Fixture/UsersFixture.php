@@ -19,8 +19,8 @@ class UsersFixture extends TestFixture {
     // phpcs:disable
     public array $fields = [
         'id' => ['type' => 'integer', 'length' => null, 'unsigned' => true, 'null' => false, 'default' => null, 'comment' => '', 'autoIncrement' => true, 'precision' => null],
-        'name' => ['type' => 'string', 'length' => 140, 'null' => false, 'default' => null, 'collate' => 'utf8mb4_unicode_ci', 'comment' => '', 'precision' => null],
-        'email' => ['type' => 'string', 'length' => 190, 'null' => true, 'default' => null, 'collate' => 'utf8mb4_unicode_ci', 'comment' => '', 'precision' => null],
+        'name' => ['type' => 'string', 'length' => 140, 'null' => false, 'default' => null, 'comment' => '', 'precision' => null],
+        'email' => ['type' => 'string', 'length' => 190, 'null' => true, 'default' => null, 'comment' => '', 'precision' => null],
         '_constraints' => [
             'primary' => ['type' => 'primary', 'columns' => ['id'], 'length' => []],
             'email' => ['type' => 'unique', 'columns' => ['email'], 'length' => []],
