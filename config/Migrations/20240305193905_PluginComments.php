@@ -21,7 +21,7 @@ class PluginComments extends AbstractMigration {
 				'signed' => false,
 			])
 			->addColumn('model', 'string', [
-				'default' => '',
+				'default' => null,
 				'limit' => 80,
 				'null' => false,
 			])
