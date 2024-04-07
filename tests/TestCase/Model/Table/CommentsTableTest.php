@@ -51,25 +51,21 @@ class CommentsTableTest extends TestCase {
 	}
 
 	/**
-	 * Test validationDefault method
+	 * Test add method
 	 *
-	 * @uses \Comments\Model\Table\CommentsTable::validationDefault()
-	 *
-	 * @return void
-	 */
-	public function testValidationDefault(): void {
-		$this->markTestIncomplete('Not implemented yet.');
-	}
-
-	/**
-	 * Test buildRules method
-	 *
-	 * @uses \Comments\Model\Table\CommentsTable::buildRules()
+	 * @uses \Comments\Model\Table\CommentsTable::add()
 	 *
 	 * @return void
 	 */
-	public function testBuildRules(): void {
-		$this->markTestIncomplete('Not implemented yet.');
+	public function testAdd(): void {
+		$data = [
+			'foreign_key' => 1,
+			'model' => 'Users',
+			'content' => 'Foo Bar',
+		];
+		$result = $this->Comments->add($data);
+		$this->assertFalse($result->isNew());
+		$this->assertNotEmpty($result->id);
 	}
 
 	/**
@@ -79,8 +75,14 @@ class CommentsTableTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function testAdd(): void {
-		$this->markTestIncomplete('Not implemented yet.');
+	public function testAddInvalid(): void {
+		$data = [
+			'foreign_key' => 1,
+			'model' => 'Users',
+		];
+		$result = $this->Comments->add($data);
+		$this->assertTrue($result->isNew());
+		$this->assertEmpty($result->id);
 	}
 
 }

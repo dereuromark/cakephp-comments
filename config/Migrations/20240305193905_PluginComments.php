@@ -76,7 +76,7 @@ class PluginComments extends AbstractMigration {
 					'user_id',
 				],
 				[
-					'parent_id',
+					'name' => 'comments-parent_id',
 				],
 			)
 			->addIndex(
@@ -85,7 +85,7 @@ class PluginComments extends AbstractMigration {
 					'foreign_key',
 				],
 				[
-					'name' => 'foreign_key',
+					'name' => 'comments-foreign_key',
 				],
 			)
 			->create();

@@ -51,7 +51,7 @@ class CommentsController extends AppController {
 		$data['content'] = $data['comment'] ?? null;
 
 		$result = $this->Comments->add($data);
-		if ($result !== true) {
+		if ($result->isNew()) {
 			$this->Flash->error(__d('comments', 'Could not save comment, please try again.'));
 		}
 

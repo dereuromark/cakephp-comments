@@ -18,9 +18,10 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\User|null $user
  * @property string|null $name
  * @property string|null $email
+ * @property string|null $title
  * @property bool $is_private
  * @property bool $is_spam
- * @property \Comments\Model\Entity\Comment $parent_comment
+ * @property \Comments\Model\Entity\Comment|null $parent_comment
  * @property array<\Comments\Model\Entity\Comment> $child_comments
  */
 class Comment extends Entity {

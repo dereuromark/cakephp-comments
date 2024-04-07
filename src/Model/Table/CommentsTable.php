@@ -92,9 +92,9 @@ class CommentsTable extends Table {
 	/**
 	 * @param array $data
 	 *
-	 * @return \Comments\Model\Entity\Comment|true
+	 * @return \Comments\Model\Entity\Comment
 	 */
-	public function add(array $data): Comment|true {
+	public function add(array $data): Comment {
 		$comment = $this->newEntity($data);
 		if ($comment->hasErrors()) {
 			return $comment;
@@ -102,7 +102,7 @@ class CommentsTable extends Table {
 
 		$this->saveOrFail($comment);
 
-		return true;
+		return $comment;
 	}
 
 }
