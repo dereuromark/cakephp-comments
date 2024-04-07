@@ -22,6 +22,8 @@ PRG redirect pattern interfering, or another `request->is('post')` check in that
 
 Make sure to set ACL for this controller if only logged in people are allowed to comment.
 
+The `Comments.Comments` helper has a `url()` method you can use to get here the URL to post to.
+
 ## Admin Backend
 Go to `/admin/comments`.
 

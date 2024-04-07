@@ -5,7 +5,6 @@ namespace Comments\Controller;
 use App\Controller\AppController;
 use Cake\Core\Configure;
 use Cake\Http\Exception\NotFoundException;
-use TinyAuth\Controller\Component\AuthComponent;
 use TinyAuth\Controller\Component\AuthUserComponent;
 
 /**

@@ -39,8 +39,8 @@ namespace Comments\Controller\Component;
 
 use BadMethodCallException;
 use Cake\Controller\Component;
+use Cake\Datasource\Paging\PaginatedInterface;
 use Cake\Event\EventInterface;
-use Cake\Http\Exception\MethodNotAllowedException;
 use Cake\Routing\Router;
 use Cake\Utility\Inflector;
 use RuntimeException;
@@ -319,10 +319,10 @@ class CommentComponent extends Component {
 	 * @return mixed
 	 */
 	protected function addComment(array $data) {
-		/** @var \Cake\Datasource\EntityInterface $entity */
+		/** @var \Cake\Datasource\EntityInterface|null $entity */
 		$entity = $this->Controller->viewBuilder()->getVar((string)$this->viewVariable);
 		if (!$entity) {
-			throw new RuntimeException('Entity missing for commmenting');
+			throw new RuntimeException('Entity missing for commenting');
 		}
 
 		$options = [
@@ -413,7 +413,10 @@ class CommentComponent extends Component {
 		$entity = $this->Controller->viewBuilder()->getVar((string)$this->viewVariable);
 
 		if (!$entity || !$entity->get('id')) {
-			throw new RuntimeException('CommentsComponent: missing view variable ' . $this->viewVariable . ' or value for primary key ' . $primaryKey . ' of model ' . $this->modelAlias);
+			/** @var string $key */
+			$key = $table->getPrimaryKey();
+
+			throw new RuntimeException('CommentsComponent: missing view variable ' . $this->viewVariable . ' or value for primary key ' . $key . ' of model ' . $this->modelAlias);
 		}
 
 		$id = $entity->get('id');
@@ -435,11 +438,12 @@ class CommentComponent extends Component {
 	/**
 	 * Paginateable tree representation of the comment data.
 	 *
-	 * @param array $options
+	 * @param array<string, mixed> $options
 	 *
 	 * @return array
 	 */
 	public function callbackFetchDataTree(array $options) {
+		/*
 		$settings = $this->_prepareModel($options);
 		$settings += ['order' => ['Comment.lft' => 'asc']];
 		$paginate = $settings;
@@ -457,31 +461,34 @@ class CommentComponent extends Component {
 		}
 
 		return array_merge($parents, $data);
+		*/
+
+		return [];
 	}
 
 	/**
 	 * Flat representation of the comment data.
 	 *
-	 * @param array $options
+	 * @param array<string, mixed> $options
 	 *
-	 * @return array
+	 * @return \Cake\Datasource\Paging\PaginatedInterface
 	 */
-	public function callbackFetchDataFlat(array $options) {
+	public function callbackFetchDataFlat(array $options): PaginatedInterface {
 		$paginate = []; //$this->_prepareModel($options);
 
-		$overloadPaginate = !empty($this->Controller->paginate['Comment']) ? $this->Controller->paginate['Comment'] : [];
+		//$overloadPaginate = !empty($this->Controller->paginate['Comment']) ? $this->Controller->paginate['Comment'] : [];
 		//$this->Controller->Paginator->settings['Comment'] = array_merge($paginate, $overloadPaginate);
 
-		/** @var \Cake\ORM\Association\HasMany&\Comments\Model\Table\CommentsTable $relation */
-		$relation = $this->Controller->{$this->modelAlias}->Comments;
+		/** @var \Comments\Model\Table\CommentsTable $relation */
+		$relation = $this->Controller->{$this->modelAlias}->Comments->getTarget();
 
-		return $this->Controller->paginate($relation->getClassName());
+		return $this->Controller->paginate($relation);
 	}
 
 	/**
 	 * Threaded comment data, one-paginateable, the whole data is fetched.
 	 *
-	 * @param array $options
+	 * @param array<string, mixed> $options
 	 *
 	 * @return array
 	 */
@@ -511,26 +518,28 @@ class CommentComponent extends Component {
 	/**
 	 * Default method, calls callback_fetchData
 	 *
-	 * @param array $options
+	 * @param array<string, mixed> $options
 	 *
 	 * @return array
 	 */
 	public function callbackFetchData($options) {
-		return $this->callbackFetchDataFlat($options);
+		$this->callbackFetchDataFlat($options);
+
+		return [];
 	}
 
 	/**
 	 * Prepare model association to fetch data
 	 *
-	 * @param array $options
+	 * @param array<string, mixed> $options
 	 *
-	 * @return bool
+	 * @return array
 	 */
 	protected function _prepareModel($options) {
 		$params = [
 			//'isAdmin' => $this->Auth->user('is_admin') == true,
 			'userModel' => $this->userModel,
-			'userData' => $this->Auth->user(),
+			//'userData' => $this->Auth->user(),
 		];
 
 		return $this->Controller->{$this->modelAlias}->commentBeforeFind(array_merge($params, $options));
@@ -577,10 +586,10 @@ class CommentComponent extends Component {
 			}
 			$permalink = '';
 			if (method_exists($this->Controller->{$this->modelAlias}, 'permalink')) {
-				$premalink = $this->Controller->{$this->modelAlias}->permalink($modelId);
+				//$premalink = $this->Controller->{$this->modelAlias}->permalink($modelId);
 			}
 			$options = [
-				'userId' => $this->Auth->user('id'),
+				'userId' => $this->userId(),
 				'modelId' => $modelId,
 				'modelName' => $modelName,
 				'defaultTitle' => $this->Controller->defaultTitle ?? '',
@@ -612,9 +621,9 @@ class CommentComponent extends Component {
 		} else {
 			if (!empty($this->Controller->passedArgs['quote'])) {
 				if (!empty($this->Controller->passedArgs['comment'])) {
-					$message = $this->_call('getFormatedComment', [$this->Controller->passedArgs['comment']]);
+					$message = $this->_call('getFormattedComment', [$this->Controller->passedArgs['comment']]);
 					if ($message) {
-						$this->Controller->request->data['Comment']['body'] = $message;
+						//$this->Controller->getRequest()->getData('Comment.body') = $message;
 					}
 				}
 			}
@@ -628,7 +637,7 @@ class CommentComponent extends Component {
 	 *
 	 * @return string|null
 	 */
-	public function callbackGetFormatedComment($commentId) {
+	public function callbackgetFormattedComment($commentId) {
 		$comment = $this->Controller->{$this->modelAlias}->Comments->find('first', [
 			'recursive' => -1,
 			'fields' => ['Comment.body', 'Comment.title'],
@@ -639,30 +648,6 @@ class CommentComponent extends Component {
 		}
 
 		return "[quote]\n" . $comment['Comment']['body'] . "\n[end quote]";
-	}
-
-	/**
-	 * Handles approval of comments.
-	 *
-	 * @param string $modelId
-	 * @param string $commentId
-	 *
-	 * @throws \Cake\Http\Exception\MethodNotAllowedException
-	 *
-	 * @return void
-	 */
-	public function callbackToggleApprove($modelId, $commentId) {
-		if (
-			!isset($this->Controller->passedArgs['comment_action'])
-			|| !($this->Controller->passedArgs['comment_action'] == 'toggle_approve' && $this->Controller->Auth->user('is_admin') == true)
-		) {
-			throw new MethodNotAllowedException(__d('comments', 'Nonrestricted operation'));
-		}
-		if ($this->Controller->{$this->modelAlias}->commentToggleApprove($commentId)) {
-			$this->flash(__d('comments', 'The Comment status has been updated.'));
-		} else {
-			$this->flash(__d('comments', 'Error appear during comment status update. Try later.'));
-		}
 	}
 
 	/**
@@ -709,13 +694,13 @@ class CommentComponent extends Component {
 	 *
 	 * @param array $urlBase
 	 *
-	 * @return \Cake\Http\Response|null
+	 * @return \Cake\Http\Response|null|void
 	 */
-	public function prgRedirect($urlBase = []) {
-		$isAjax = $this->Controller->request->getParam('isAjax') ?? false;
+	public function prgRedirect(array $urlBase = []) {
+		$isAjax = $this->Controller->getRequest()->getParam('isAjax') ?? false;
 
 		$url = array_merge(
-			array_diff_key($this->Controller->passedArgs, array_flip($this->_supportNamedParams)),
+			array_diff_key($this->Controller->getRequest()->getParam('pass'), array_flip($this->_supportNamedParams)),
 			$urlBase,
 		);
 		if (!$isAjax) {
@@ -734,18 +719,18 @@ class CommentComponent extends Component {
 	 */
 	public function permalink() {
 		$params = [];
-		foreach (['admin', 'controller', 'action', 'plugin'] as $name) {
-			if (isset($this->Controller->request->params['name'])) {
-				$params[$name] = $this->Controller->request->params['name'];
+		foreach (['prefix', 'controller', 'action', 'plugin'] as $name) {
+			if ($this->Controller->getRequest()->getParam($name)) {
+				$params[$name] = $this->Controller->getRequest()->getParam($name);
 			}
 		}
 
-		if (isset($this->Controller->request->params['pass'])) {
-			$params = array_merge($params, $this->Controller->params['pass']);
+		if ($this->Controller->getRequest()->getParam('pass')) {
+			$params = array_merge($params, $this->Controller->getRequest()->getParam('pass'));
 		}
 
-		if (isset($this->Controller->request->params['named'])) {
-			foreach ($this->Controller->request->params['named'] as $k => $v) {
+		if ($this->Controller->getRequest()->getParam('named')) {
+			foreach ($this->Controller->getRequest()->getParam('named') as $k => $v) {
 				if (!in_array($k, $this->_supportNamedParams)) {
 					$params[$k] = $v;
 				}
@@ -769,10 +754,16 @@ class CommentComponent extends Component {
 		$methodName = 'callbackComments' . Inflector::camelize(Inflector::underscore($method));
 		$localMethodName = 'callback' . $method;
 		if (method_exists($this->Controller, $methodName)) {
-			return call_user_func_array([$this->Controller, $methodName], $args);
+			/** @var callable $callable */
+			$callable = [$this->Controller, $methodName];
+
+			return call_user_func_array($callable, $args);
 		}
 		if (method_exists($this, $localMethodName)) {
-			return call_user_func_array([$this, $localMethodName], $args);
+			/** @var callable $callable */
+			$callable = [$this, $localMethodName];
+
+			return call_user_func_array($callable, $args);
 		}
 
 			throw new BadMethodCallException();
@@ -781,28 +772,21 @@ class CommentComponent extends Component {
 	/**
 	 * Non view action process method
 	 *
-	 * @param array $options
+	 * @param array<string, mixed> $options
 	 *
-	 * @return bool
+	 * @return \Cake\Http\Response|null|void
 	 */
 	protected function _processActions(array $options) {
 		//extract($options);
 		if (isset($this->Controller->passedArgs['comment'])) {
-			if ($this->allowAnonymousComment || $this->Auth->user()) {
+			if ($this->allowAnonymousComment || $this->userId()) {
+				$id = $options['id'];
+				$displayType = $options['displayType'];
+
 				if (isset($this->Controller->passedArgs['comment_action'])) {
 					$commentAction = $this->Controller->passedArgs['comment_action'];
-					$isAdmin = (bool)$this->Auth->user('is_admin');
-					if (!$isAdmin) {
-						if (in_array($commentAction, ['delete'])) {
-							call_user_func([$this, '_' . Inflector::variable($commentAction)], $id, $this->Controller->passedArgs['comment']);
-
-							return;
-						}
-
-						return $this->Controller->blackHole("CommentsComponent: comment_Action '$commentAction' is for admins only");
-					}
-					if (!in_array($commentAction, ['toggle_approve', 'delete'])) {
-						return $this->Controller->blackHole("CommentsComponent: unsupported comment_Action '$commentAction'");
+					if (!in_array($commentAction, ['delete'])) {
+						//return $this->Controller->blackHole("CommentsComponent: unsupported comment_Action '$commentAction'");
 					}
 					$this->_call(Inflector::variable($commentAction), [$id, $this->Controller->passedArgs['comment']]);
 				} else {
@@ -812,7 +796,7 @@ class CommentComponent extends Component {
 				}
 			} else {
 				//$this->Controller->Session->write('Auth.redirect', $this->Controller->request['url']);
-				$this->Controller->redirect($this->Controller->Auth->loginAction);
+				$this->Controller->redirect($this->Controller->Auth->getConfig('loginAction'));
 			}
 		}
 	}

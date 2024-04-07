@@ -8,7 +8,6 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\Table;
-use Comments\Model\Table\CommentsTable;
 
 class CommentableBehavior extends Behavior {
 
@@ -103,13 +102,13 @@ class CommentableBehavior extends Behavior {
 	 * Handle adding comments
 	 *
 	 * @param int|null $commentId parent comment id, NULL for none
-	 * @param array $options extra information and comment statistics
+	 * @param array<string, mixed> $options extra information and comment statistics
 	 *
 	 * @throws \Cake\Http\Exception\MethodNotAllowedException
 	 *
-	 * @return bool|null
+	 * @return int|null
 	 */
-	public function commentAdd(?int $commentId = null, array $options = []) {
+	public function commentAdd(?int $commentId = null, array $options = []): ?int {
 		$options += ['defaultTitle' => '', 'model' => null, 'modelId' => null, 'userId' => null, 'data' => [], 'permalink' => ''];
 
 		if (isset($options['permalink'])) {
@@ -148,7 +147,7 @@ class CommentableBehavior extends Behavior {
 			if (!empty($data['Other'])) {
 				foreach ($data['Other'] as $spam) {
 					if ($spam) {
-						return false;
+						return null;
 					}
 				}
 			}
@@ -166,7 +165,7 @@ class CommentableBehavior extends Behavior {
 
 			$comment = $this->commentsTable()->newEntity($data);
 
-			if ($this->commentsTable()->Behaviors->enabled('Tree')) {
+			if ($this->commentsTable()->behaviors()->has('Tree')) {
 				if (isset($data['Comment']['foreign_key'])) {
 					$fk = $data['Comment']['foreign_key'];
 				} elseif (isset($data['foreign_key'])) {
@@ -174,7 +173,7 @@ class CommentableBehavior extends Behavior {
 				} else {
 					$fk = null;
 				}
-				$this->commentsTable()->Behaviors->load('Tree', [
+				$this->commentsTable()->behaviors()->load('Tree', [
 						'scope' => ['Comment.foreign_key' => $fk]]);
 			}
 
@@ -195,7 +194,7 @@ class CommentableBehavior extends Behavior {
 				return $id;
 			}
 
-			return false;
+			return null;
 		}
 
 		return null;
@@ -240,11 +239,11 @@ class CommentableBehavior extends Behavior {
 	}
 
 	/**
-	 * @return \Comments\Model\Table\CommentsTable&\Cake\ORM\Association\HasMany
+	 * @return \Comments\Model\Table\CommentsTable
 	 */
 	protected function commentsTable() {
-		/** @var \Comments\Model\Table\CommentsTable&\Cake\ORM\Association\HasMany */
-		return $this->_table->Comments;
+		/** @var \Comments\Model\Table\CommentsTable */
+		return $this->_table->Comments->getTarget();
 	}
 
 }
