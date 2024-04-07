@@ -245,7 +245,7 @@ class CommentComponent extends Component {
 		$this->viewVariable = Inflector::variable($entityName);
 		//$this->Controller->helpers = array_merge($this->Controller->helpers, ['Comments.CommentWidget', 'Time', 'Comments.Cleaner', 'Comments.Tree']);
 		if (!$this->Controller->{$this->modelAlias}->behaviors()->has('Commentable')) {
-			$this->Controller->{$this->modelAlias}->behaviors()->attach('Comments.Commentable', ['userModelAlias' => $this->userModel, 'userModelClass' => $this->userModelClass]);
+			$this->Controller->{$this->modelAlias}->behaviors()->load('Comments.Commentable', ['userModelAlias' => $this->userModel, 'userModelClass' => $this->userModelClass]);
 		}
 
 		/*
