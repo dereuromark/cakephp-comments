@@ -53,7 +53,7 @@ class PluginComments extends AbstractMigration {
 			->addColumn('content', 'text', [
 				'default' => null,
 				'limit' => 16777215,
-				'null' => true,
+				'null' => false,
 			])
 			->addColumn('is_private', 'boolean', [
 				'default' => false,

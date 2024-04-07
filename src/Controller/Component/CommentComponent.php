@@ -39,6 +39,7 @@ namespace Comments\Controller\Component;
 
 use BadMethodCallException;
 use Cake\Controller\Component;
+use Cake\Core\Configure;
 use Cake\Datasource\Paging\PaginatedInterface;
 use Cake\Event\EventInterface;
 use Cake\Routing\Router;
@@ -56,7 +57,12 @@ class CommentComponent extends Component {
 	 * @var array<string, mixed>
 	 */
 	protected array $_defaultConfig = [
+		'callback' => 'beforeRender',
+		'userModelClass' => 'Users',
 		'userIdField' => 'id',
+		'allowAnonymous' => false,
+		'useEntity' => false,
+		'viewVariable' => null,
 	];
 
 	/**
@@ -74,30 +80,6 @@ class CommentComponent extends Component {
 	 * @var \App\Controller\AppController
 	 */
 	protected $Controller;
-
-	/**
-	 * Name of actions this component should use
-	 *
-	 * Customizable in beforeFilter()
-	 *
-	 * @var array<string>
-	 */
-	protected $actionNames = [
-		'view', 'comments',
-	];
-
-	/**
-	 * Actions used for deleting of some model record, which doesn't use SoftDelete
-	 * (so we want comments delete directly)
-	 *
-	 * Causes than Comment association will NOT be automatically unbind()ed,
-	 * independently on $this->unbindAssoc
-	 *
-	 * Customizable in beforeFilter()
-	 *
-	 * @var array<string>
-	 */
-	protected $deleteActions = [];
 
 	/**
 	 * Name of 'commentable' model
@@ -125,16 +107,6 @@ class CommentComponent extends Component {
 	 * @var string Name of the user model
 	 */
 	protected $userModel = 'Users';
-
-	/**
-	 * Class Name for user model in ClassRegistry format.
-	 * Ex: For User model stored in User plugin need to use Users.User
-	 *
-	 * Customizable in beforeFilter()
-	 *
-	 * @var string user model class name
-	 */
-	protected $userModelClass = 'Users';
 
 	/**
 	 * Flag if this component should permanently unbind association to Comment model in order to not
@@ -174,15 +146,6 @@ class CommentComponent extends Component {
 	protected $viewComments = 'commentsData';
 
 	/**
-	 * Flag to allow anonymous user make comments
-	 *
-	 * Customizable in beforeFilter()
-	 *
-	 * @var bool
-	 */
-	protected $allowAnonymousComment = false;
-
-	/**
 	 * Settings to use when CommentsComponent needs to do a flash message with SessionComponent::setFlash().
 	 * Available keys are:
 	 *
@@ -219,6 +182,14 @@ class CommentComponent extends Component {
 	 */
 	public function initialize(array $config): void {
 		$this->Controller = $this->getController();
+
+		$config += (array)Configure::read('Comments');
+		$this->setConfig($config);
+
+		if (!$this->getConfig('userModel')) {
+			[, $alias] = pluginSplit($this->getConfig('userModelClass'));
+			$this->setConfig('userModel', $alias);
+		}
 	}
 
 	/**
@@ -245,7 +216,11 @@ class CommentComponent extends Component {
 		$this->viewVariable = Inflector::variable($entityName);
 		//$this->Controller->helpers = array_merge($this->Controller->helpers, ['Comments.CommentWidget', 'Time', 'Comments.Cleaner', 'Comments.Tree']);
 		if (!$this->Controller->{$this->modelAlias}->behaviors()->has('Commentable')) {
-			$this->Controller->{$this->modelAlias}->behaviors()->load('Comments.Commentable', ['userModelAlias' => $this->userModel, 'userModelClass' => $this->userModelClass]);
+			$config = [
+				'userModelClass' => $this->getConfig('userModelClass'),
+				'userId' => $this->userId(),
+			];
+			$this->Controller->{$this->modelAlias}->behaviors()->load('Comments.Commentable', $config);
 		}
 
 		/*
@@ -409,8 +384,9 @@ class CommentComponent extends Component {
 			throw new RuntimeException('CommentsComponent: model ' . $this->modelAlias . ' or association ' . $this->assocName . ' doesn\'t exist');
 		}
 
+		assert($this->viewVariable !== null);
 		/** @var \Cake\Datasource\EntityInterface|null $entity */
-		$entity = $this->Controller->viewBuilder()->getVar((string)$this->viewVariable);
+		$entity = $this->Controller->viewBuilder()->getVar($this->viewVariable);
 
 		if (!$entity || !$entity->get('id')) {
 			/** @var string $key */
@@ -578,13 +554,10 @@ class CommentComponent extends Component {
 	 * @return void
 	 */
 	public function callbackAdd($modelId, $commentId, $displayType, $data = []) {
-		if (!empty($this->Controller->data)) {
-			$data['Comment']['body'] = $this->cleanHtml($this->Controller->data['Comment']['body']);
-			$modelName = $this->Controller->{$this->modelAlias}->alias;
-			if (!empty($this->Controller->{$this->modelAlias}->fullName)) {
-				$modelName = $this->Controller->{$this->modelAlias}->fullName;
-			}
-			$permalink = '';
+		if ($this->Controller->getRequest()->getData('Comment')) {
+			$data = $this->Controller->getRequest()->getData('Comment');
+			$modelName = $this->Controller->{$this->modelAlias}->getRegistryAlias();
+			$permalink = null;
 			if (method_exists($this->Controller->{$this->modelAlias}, 'permalink')) {
 				//$premalink = $this->Controller->{$this->modelAlias}->permalink($modelId);
 			}
@@ -594,7 +567,8 @@ class CommentComponent extends Component {
 				'modelName' => $modelName,
 				'defaultTitle' => $this->Controller->defaultTitle ?? '',
 				'data' => $data,
-				'permalink' => $permalink];
+				'permalink' => $permalink,
+			];
 			$result = $this->Controller->{$this->modelAlias}->commentAdd($commentId, $options);
 
 			if ($result !== null) {
@@ -777,9 +751,8 @@ class CommentComponent extends Component {
 	 * @return \Cake\Http\Response|null|void
 	 */
 	protected function _processActions(array $options) {
-		//extract($options);
 		if (isset($this->Controller->passedArgs['comment'])) {
-			if ($this->allowAnonymousComment || $this->userId()) {
+			if ($this->getConfig('allowAnonymous') || $this->userId()) {
 				$id = $options['id'];
 				$displayType = $options['displayType'];
 

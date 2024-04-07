@@ -8,7 +8,7 @@ use Cake\ORM\Entity;
  * Comment Entity
  *
  * @property int $id
- * @property string|null $content
+ * @property string $content
  * @property string $model
  * @property int $foreign_key
  * @property int|null $parent_id

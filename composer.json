@@ -30,10 +30,10 @@
 		"cakephp/cakephp": "^5.0.0"
 	},
 	"require-dev": {
-		"cakephp/migrations": "^4.0.1",
+		"cakephp/migrations": "^4.1.1",
 		"dereuromark/cakephp-tinyauth": "^4.1.0",
 		"fig-r/psr2r-sniffer": "dev-master",
-		"phpunit/phpunit": "^10.1"
+		"phpunit/phpunit": "^10.2"
 	},
 	"autoload": {
 		"psr-4": {
