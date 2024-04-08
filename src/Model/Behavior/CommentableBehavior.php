@@ -126,22 +126,23 @@ class CommentableBehavior extends Behavior {
 					],
 				])->count()
 			) {
-				throw new MethodNotAllowedException(__d('comments', 'Unallowed comment id', true));
+				throw new MethodNotAllowedException('Invalid parent id');
 			}
 		}
 
 		$data = $options['data'];
+		$data['content'] = $data['comment'] ?? null;
 		if ($data) {
-			$data['Comment']['user_id'] = $options['userId'];
-			$data['Comment']['model'] = $options['model'];
-			if (!isset($data['Comment']['foreign_key'])) {
-				$data['Comment']['foreign_key'] = $options['modelId'];
+			$data['user_id'] = $options['userId'];
+			$data['model'] = $options['model'];
+			if (!isset($data['foreign_key'])) {
+				$data['foreign_key'] = $options['modelId'];
 			}
-			if (!isset($data['Comment']['parent_id'])) {
-				$data['Comment']['parent_id'] = $commentId;
+			if (!isset($data['parent_id'])) {
+				$data['parent_id'] = $commentId;
 			}
-			if (empty($data['Comment']['title'])) {
-				$data['Comment']['title'] = $options['defaultTitle'];
+			if (empty($data['title'])) {
+				$data['title'] = $options['defaultTitle'];
 			}
 
 			if (!empty($data['Other'])) {
@@ -166,22 +167,22 @@ class CommentableBehavior extends Behavior {
 			$comment = $this->commentsTable()->newEntity($data);
 
 			if ($this->commentsTable()->behaviors()->has('Tree')) {
-				if (isset($data['Comment']['foreign_key'])) {
-					$fk = $data['Comment']['foreign_key'];
+				if (isset($data['foreign_key'])) {
+					$fk = $data['foreign_key'];
 				} elseif (isset($data['foreign_key'])) {
 					$fk = $data['foreign_key'];
 				} else {
 					$fk = null;
 				}
 				$this->commentsTable()->behaviors()->load('Tree', [
-						'scope' => ['Comment.foreign_key' => $fk]]);
+						'scope' => ['Comments.foreign_key' => $fk]]);
 			}
 
 			if ($this->commentsTable()->save($comment)) {
 				$id = $comment->id;
-				//$data['Comment']['id'] = $id;
+				//$data['id'] = $id;
 				//$this->commentsTable()->data[$this->commentsTable()->alias]['id'] = $id;
-				if (!isset($data['Comment']['approved']) || $data['Comment']['approved'] == true) {
+				if (!isset($data['approved']) || $data['approved'] == true) {
 					//$this->changeCommentCount($Model, $modelId);
 				}
 

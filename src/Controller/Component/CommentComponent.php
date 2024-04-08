@@ -57,11 +57,11 @@ class CommentComponent extends Component {
 	 * @var array<string, mixed>
 	 */
 	protected array $_defaultConfig = [
-		'callback' => 'beforeRender',
+		'on' => 'beforeRender',
 		'userModelClass' => 'Users',
 		'userIdField' => 'id',
 		'allowAnonymous' => false,
-		'useEntity' => false,
+		'useEntity' => true,
 		'viewVariable' => null,
 	];
 
@@ -248,6 +248,10 @@ class CommentComponent extends Component {
 			return null;
 		}
 
+		if ($this->getConfig('on') !== 'startup') {
+			return null;
+		}
+
 		return $this->process();
 	}
 
@@ -264,6 +268,13 @@ class CommentComponent extends Component {
 			$action = $this->Controller->getRequest()->getParam('action') ?: '';
 			if (!in_array($action, $actions, true)) {
 				return null;
+			}
+		}
+
+		if ($this->getConfig('on') === 'beforeRender') {
+			$result = $this->process();
+			if ($result) {
+				return $result;
 			}
 		}
 
@@ -300,17 +311,28 @@ class CommentComponent extends Component {
 			throw new RuntimeException('Entity missing for commenting');
 		}
 
+		if ($this->getConfig('useEntity')) {
+			$modelId = $entity->get('id');
+		} else {
+			$modelId = $data['id'] ?? null;
+		}
+
 		$options = [
 			'userId' => $this->userId(),
-			'modelId' => $entity->get('id'),
-			'modelName' => $this->modelAlias,
+			'modelId' => $modelId,
+			'model' => $this->modelAlias,
 			'data' => $data,
 			//'permalink' => $permalink,
 		];
 
 		// Parent comment id
 		$commentId = $data['parent_id'] ?? null;
-		$result = $this->Controller->{$this->modelAlias}->commentAdd($commentId, $options);
+		/** @var \Comments\Model\Behavior\CommentableBehavior $table */
+		$table = $this->Controller->{$this->modelAlias};
+		$result = $table->commentAdd($commentId, $options);
+		if ($result) {
+			return $this->prgRedirect();
+		}
 
 		return $result;
 	}
