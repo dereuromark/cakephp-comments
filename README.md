@@ -10,9 +10,6 @@
 
 Comments plugin for CakePHP applications.
 
-NOte: THIS IS A **WIP** PLUGIN - Please help finish it.
-It aims to resurrect e.g. https://github.com/CakeDC/comments/
-
 This branch is for use with **CakePHP 5.0+**. For details see [version map](https://github.com/dereuromark/cakephp-comments/wiki#cakephp-version-map).
 
 ## Features
