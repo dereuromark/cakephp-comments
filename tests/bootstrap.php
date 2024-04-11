@@ -80,16 +80,6 @@ Cache::setConfig($cache);
 
 class_alias(AppController::class, 'App\Controller\AppController');
 
-Configure::write('App', [
-	'namespace' => 'TestApp',
-	'encoding' => 'UTF-8',
-	'paths' => [
-		'templates' => [
-			PLUGIN_ROOT . DS . 'tests' . DS . 'test_app' . DS . 'templates' . DS,
-		],
-	],
-]);
-
 Plugin::getCollection()->add(new CommentsPlugin());
 
 Chronos::setTestNow(Chronos::now());
