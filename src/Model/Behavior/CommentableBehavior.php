@@ -82,19 +82,23 @@ class CommentableBehavior extends Behavior {
 			'foreignKey' => 'foreign_key',
 		]);
 
-		if ($this->_table->getSchema()->getColumn('parent_id')) {
+		if ($this->_table->getSchema()->getColumn('parent_id') && !$this->commentsTable()->hasBehavior('Tree')) {
 			$this->commentsTable()->addBehavior('Tree');
 		}
 
-		if (!empty($config['userModel']) && is_array($config['userModel'])) {
-			$this->commentsTable()->belongsTo($config['userModelAlias'], $config['userModel']);
+		if ($this->commentsTable()->hasAssociation($this->getConfig('userModelAlias'))) {
+			return;
+		}
+
+		if ($this->getConfig('userModel') && is_array($this->getConfig('userModel'))) {
+			$this->commentsTable()->belongsTo($this->getConfig('userModelAlias'), $this->getConfig('userModel'));
 		} else {
 			$userConfig = [
 				'className' => $this->getConfig('userModelClass'),
 				'foreignKey' => 'user_id',
 				//'counterCache' => true,
 			];
-			$this->commentsTable()->belongsTo($this->getConfig('userModelClass'), $userConfig);
+			$this->commentsTable()->belongsTo($this->getConfig('userModelAlias'), $userConfig);
 		}
 	}
 
