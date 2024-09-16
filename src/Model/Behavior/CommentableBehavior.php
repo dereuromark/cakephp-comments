@@ -77,10 +77,12 @@ class CommentableBehavior extends Behavior {
 			]);
 		}
 
-		$this->commentsTable()->belongsTo($this->getConfig('modelClass'), [
-			'className' => $this->getConfig('modelClass'),
-			'foreignKey' => 'foreign_key',
-		]);
+		if (!$this->commentsTable()->hasAssociation($this->getConfig('modelClass'))) {
+            $this->commentsTable()->belongsTo($this->getConfig('modelClass'), [
+                'className' => $this->getConfig('modelClass'),
+                'foreignKey' => 'foreign_key',
+            ]);
+        }
 
 		if ($this->_table->getSchema()->getColumn('parent_id') && !$this->commentsTable()->hasBehavior('Tree')) {
 			$this->commentsTable()->addBehavior('Tree');
