@@ -455,7 +455,7 @@ class CommentComponent extends Component {
 			$rec = $data[0]['Comment'];
 			$settings['conditions'][] = ['Comment.lft <' => $rec['lft']];
 			$settings['conditions'][] = ['Comment.rght >' => $rec['rght']];
-			$parents = $this->Controller->{$this->modelAlias}->Comments->find('all', $settings);
+			$parents = $this->Controller->{$this->modelAlias}->Comments->find('all', ...$settings);
 		}
 
 		return array_merge($parents, $data);
@@ -510,7 +510,7 @@ class CommentComponent extends Component {
 			'Comment.parent_id' => 'asc',
 			'Comment.created' => 'asc']];
 
-		return $Comment->find('threaded', $settings);
+		return $Comment->find('threaded', ...$settings);
 	}
 
 	/**
@@ -634,8 +634,7 @@ class CommentComponent extends Component {
 	 * @return string|null
 	 */
 	public function callbackgetFormattedComment($commentId) {
-		$comment = $this->Controller->{$this->modelAlias}->Comments->find('first', [
-			'recursive' => -1,
+		$comment = $this->Controller->{$this->modelAlias}->Comments->find('first', ...[
 			'fields' => ['Comment.body', 'Comment.title'],
 			'conditions' => ['Comment.id' => $commentId]]);
 		if ($comment) {

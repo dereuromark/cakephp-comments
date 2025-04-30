@@ -124,7 +124,7 @@ class CommentableBehavior extends Behavior {
 		if ($commentId) {
 			//$this->commentsTable()->id = $commentId;
 			if (
-				!$this->commentsTable()->find('all', [
+				!$this->commentsTable()->find('all', ...[
 					'conditions' => [
 						'Comment.id' => $commentId,
 						'Comment.approved' => true,
@@ -218,7 +218,7 @@ class CommentableBehavior extends Behavior {
 	public function findThreaded(SelectQuery $query, array $options = []): SelectQuery {
 		return $query->contain([
 			'Comments' => function (Query $q) use ($options) {
-				return $q->find('threaded', $options);
+				return $q->find('threaded', ...$options);
 			},
 		]);
 	}
