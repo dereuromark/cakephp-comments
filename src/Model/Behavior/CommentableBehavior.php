@@ -181,7 +181,9 @@ class CommentableBehavior extends Behavior {
 					$fk = null;
 				}
 				$this->commentsTable()->behaviors()->load('Tree', [
-						'scope' => ['Comments.foreign_key' => $fk]]);
+					'scope' => ['Comments.foreign_key' => $fk],
+
+				]);
 			}
 
 			if ($this->commentsTable()->save($comment)) {

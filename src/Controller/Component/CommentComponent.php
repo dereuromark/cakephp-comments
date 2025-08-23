@@ -504,16 +504,21 @@ class CommentComponent extends Component {
 			'Comment.title', 'Comment.body', 'Comment.slug', 'Comment.created',
 			$this->Controller->{$this->modelAlias}->alias . '.' . $this->Controller->{$this->modelAlias}->primaryKey,
 			$this->userModel . '.' . $Comment->{$this->userModel}->primaryKey,
-			$this->userModel . '.' . $Comment->{$this->userModel}->displayField];
+			$this->userModel . '.' . $Comment->{$this->userModel}->displayField,
+
+		];
 
 		if ($Comment->{$this->userModel}->hasField('slug')) {
 			$settings['fields'][] = $this->userModel . '.slug';
 		}
 
 		$settings += [
-		'order' => [
-			'Comment.parent_id' => 'asc',
-			'Comment.created' => 'asc']];
+			'order' => [
+				'Comment.parent_id' => 'asc',
+				'Comment.created' => 'asc',
+			],
+
+		];
 
 		return $Comment->find('threaded', ...$settings);
 	}
@@ -641,7 +646,9 @@ class CommentComponent extends Component {
 	public function callbackgetFormattedComment($commentId) {
 		$comment = $this->Controller->{$this->modelAlias}->Comments->find('first', ...[
 			'fields' => ['Comment.body', 'Comment.title'],
-			'conditions' => ['Comment.id' => $commentId]]);
+			'conditions' => ['Comment.id' => $commentId],
+
+		]);
 		if ($comment) {
 		} else {
 			return null;
