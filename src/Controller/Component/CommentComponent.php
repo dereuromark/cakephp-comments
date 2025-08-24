@@ -505,7 +505,6 @@ class CommentComponent extends Component {
 			$this->Controller->{$this->modelAlias}->alias . '.' . $this->Controller->{$this->modelAlias}->primaryKey,
 			$this->userModel . '.' . $Comment->{$this->userModel}->primaryKey,
 			$this->userModel . '.' . $Comment->{$this->userModel}->displayField,
-
 		];
 
 		if ($Comment->{$this->userModel}->hasField('slug')) {
@@ -517,7 +516,6 @@ class CommentComponent extends Component {
 				'Comment.parent_id' => 'asc',
 				'Comment.created' => 'asc',
 			],
-
 		];
 
 		return $Comment->find('threaded', ...$settings);
@@ -647,7 +645,6 @@ class CommentComponent extends Component {
 		$comment = $this->Controller->{$this->modelAlias}->Comments->find('first', ...[
 			'fields' => ['Comment.body', 'Comment.title'],
 			'conditions' => ['Comment.id' => $commentId],
-
 		]);
 		if ($comment) {
 		} else {

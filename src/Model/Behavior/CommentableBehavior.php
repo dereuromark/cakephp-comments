@@ -182,7 +182,6 @@ class CommentableBehavior extends Behavior {
 				}
 				$this->commentsTable()->behaviors()->load('Tree', [
 					'scope' => ['Comments.foreign_key' => $fk],
-
 				]);
 			}
 
