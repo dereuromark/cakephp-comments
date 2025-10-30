@@ -5,7 +5,6 @@ namespace Comments\Model\Behavior;
 use Cake\Core\Configure;
 use Cake\Http\Exception\MethodNotAllowedException;
 use Cake\ORM\Behavior;
-use Cake\ORM\Query;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\Table;
 
@@ -218,7 +217,7 @@ class CommentableBehavior extends Behavior {
 	 */
 	public function findThreaded(SelectQuery $query, array $options = []): SelectQuery {
 		return $query->contain([
-			'Comments' => function (Query $q) use ($options) {
+			'Comments' => function (SelectQuery $q) use ($options) {
 				return $q->find('threaded', ...$options);
 			},
 		]);
@@ -234,7 +233,7 @@ class CommentableBehavior extends Behavior {
 	 */
 	public function findComments(SelectQuery $query, array $options = []): SelectQuery {
 		return $query->contain([
-			'Comments' => function (Query $q) use ($options) {
+			'Comments' => function (SelectQuery $q) use ($options) {
 				$q->contain('Users');
 				$q->where(['foreign_key' => $options['id']]);
 				if ($this->getConfig('hiddenField')) {
