@@ -807,7 +807,7 @@ class CommentComponent extends Component {
 	/**
 	 * Wrapping method to clean incoming html contents
 	 *
-	 * @deprecated 2.0.0 Use proper sanitization in your application layer
+	 * @deprecated 0.1.3 Use proper sanitization in your application layer
 	 *
 	 * @param string $text
 	 * @param string $settings
@@ -815,7 +815,7 @@ class CommentComponent extends Component {
 	 * @return string
 	 */
 	public function cleanHtml($text, $settings = 'full') {
-		deprecationWarning('CommentComponent::cleanHtml() is deprecated. Use proper sanitization in your application layer.', '2.0.0');
+		deprecationWarning('CommentComponent::cleanHtml() is deprecated. Use proper sanitization in your application layer.', '0.1.3');
 
 		//$cleaner = & new CleanerHelper(new View($this->Controller));
 		//return $cleaner->clean($text, $settings);
