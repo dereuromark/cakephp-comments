@@ -123,13 +123,13 @@ class CommentableBehavior extends Behavior {
 		if ($commentId) {
 			//$this->commentsTable()->id = $commentId;
 			if (
-				!$this->commentsTable()->find('all', ...[
-					'conditions' => [
+				!$this->commentsTable()->find()
+					->where([
 						'Comment.id' => $commentId,
 						'Comment.approved' => true,
 						'Comment.foreign_key' => $options['modelId'],
-					],
-				])->count()
+					])
+					->count()
 			) {
 				throw new MethodNotAllowedException('Invalid parent id');
 			}
@@ -174,8 +174,8 @@ class CommentableBehavior extends Behavior {
 			if ($this->commentsTable()->behaviors()->has('Tree')) {
 				if (isset($data['foreign_key'])) {
 					$fk = $data['foreign_key'];
-				} elseif (isset($data['foreign_key'])) {
-					$fk = $data['foreign_key'];
+				} elseif (isset($data['model_id'])) {
+					$fk = $data['model_id'];
 				} else {
 					$fk = null;
 				}

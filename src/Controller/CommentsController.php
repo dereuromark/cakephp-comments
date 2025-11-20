@@ -52,6 +52,8 @@ class CommentsController extends AppController {
 		$result = $this->Comments->add($data);
 		if ($result->isNew()) {
 			$this->Flash->error(__d('comments', 'Could not save comment, please try again.'));
+		} else {
+			$this->Flash->success(__d('comments', 'The comment has been saved.'));
 		}
 
 		return $this->redirect($this->referer(['action' => 'index']));

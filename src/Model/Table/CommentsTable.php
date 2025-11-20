@@ -70,6 +70,7 @@ class CommentsTable extends Table {
 		$validator->requirePresence('model', 'create');
 		$validator->notEmptyString('foreign_key');
 		$validator->requirePresence('foreign_key', 'create');
+		$validator->email('email', false, __('Please enter a valid email address'));
 
 		return $validator;
 	}
