@@ -76,7 +76,7 @@ class PluginComments extends BaseMigration {
 					'user_id',
 				],
 				[
-					'name' => 'comments-parent_id',
+					'name' => 'comments-user_id',
 				],
 			)
 			->addIndex(

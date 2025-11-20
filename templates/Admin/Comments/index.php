@@ -42,7 +42,7 @@
                     <td>
                         <?= h($comment->email) ?>
                         <?php if ($comment->name) { ?>
-                            <?php echo h($comment->name); ?>
+                            (<?= h($comment->name) ?>)
                         <?php } ?>
                     </td>
                     <td><?= $this->IconSnippet->yesNo($comment->is_private) ?></td>
