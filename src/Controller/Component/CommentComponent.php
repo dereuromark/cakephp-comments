@@ -815,7 +815,7 @@ class CommentComponent extends Component {
 	 * @return string
 	 */
 	public function cleanHtml($text, $settings = 'full') {
-		deprecationWarning('CommentComponent::cleanHtml() is deprecated.');
+		deprecationWarning('CommentComponent::cleanHtml() is deprecated. Use proper sanitization in your application layer.', '2.0.0');
 
 		//$cleaner = & new CleanerHelper(new View($this->Controller));
 		//return $cleaner->clean($text, $settings);
