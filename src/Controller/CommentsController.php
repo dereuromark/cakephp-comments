@@ -47,7 +47,7 @@ class CommentsController extends AppController {
 		$data['model'] = $model;
 		$data['foreign_key'] = $entity->get('id');
 		$data['user_id'] = $this->userId();
-		$data['content'] = $data['comment'] ?? null;
+		$data['content'] = $data['comment'] ?? $data['content'] ?? null;
 
 		$result = $this->Comments->add($data);
 		if ($result->isNew()) {
@@ -71,7 +71,9 @@ class CommentsController extends AppController {
 			return $this->Auth->user('id');
 		}
 
-		return $this->getRequest()->getSession()->read('Auth.User.' . $userIdField);
+		$sessionKey = Configure::read('Comments.sessionKey') ?? 'Auth.User';
+
+		return $this->getRequest()->getSession()->read($sessionKey . '.' . $userIdField);
 	}
 
 	/**

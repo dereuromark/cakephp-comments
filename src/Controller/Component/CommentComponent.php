@@ -60,6 +60,7 @@ class CommentComponent extends Component {
 		'on' => 'beforeRender',
 		'userModelClass' => 'Users',
 		'userIdField' => 'id',
+		'sessionKey' => null, // Defaults to 'Auth.User', use 'Auth' for CakeDC/Users
 		'allowAnonymous' => false,
 		'useEntity' => true,
 		'viewVariable' => null,
@@ -352,7 +353,8 @@ class CommentComponent extends Component {
 		} elseif (!$userId && $this->Controller->components()->has('Auth')) {
 			$userId = $this->Controller->Auth->user($this->getConfig('userIdField'));
 		} elseif (!$userId) {
-			$userId = $this->Controller->getRequest()->getSession()->read('Auth.User.' . $this->getConfig('userIdField'));
+			$sessionKey = $this->getConfig('sessionKey') ?? Configure::read('Comments.sessionKey') ?? 'Auth.User';
+			$userId = $this->Controller->getRequest()->getSession()->read($sessionKey . '.' . $this->getConfig('userIdField'));
 		}
 
 		return $userId;

@@ -136,7 +136,7 @@ class CommentableBehavior extends Behavior {
 		}
 
 		$data = $options['data'];
-		$data['content'] = $data['comment'] ?? null;
+		$data['content'] = $data['comment'] ?? $data['content'] ?? null;
 		if ($data) {
 			$data['user_id'] = $options['userId'];
 			$data['model'] = $options['model'];

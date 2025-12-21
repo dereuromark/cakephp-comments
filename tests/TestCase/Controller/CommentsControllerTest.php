@@ -28,7 +28,7 @@ class CommentsControllerTest extends TestCase {
 	];
 
 	/**
-	 * Test add method
+	 * Test add method with 'comment' field name
 	 *
 	 * @uses \Comments\Controller\CommentsController::add()
 	 *
@@ -46,6 +46,34 @@ class CommentsControllerTest extends TestCase {
 		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 1], $data);
 
 		$this->assertRedirect(['action' => 'index']);
+
+		Configure::delete('Comments.controllerModels');
+	}
+
+	/**
+	 * Test add method with 'content' field name (alternative)
+	 *
+	 * @uses \Comments\Controller\CommentsController::add()
+	 *
+	 * @return void
+	 */
+	public function testAddWithContentField(): void {
+		$this->disableErrorHandlerMiddleware();
+
+		Configure::write('Comments.controllerModels.Posts', 'Posts');
+
+		$data = [
+			'content' => 'This is a test comment using content field',
+		];
+
+		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 1], $data);
+
+		$this->assertRedirect(['action' => 'index']);
+
+		$comment = $this->fetchTable('Comments.Comments')->find()
+			->where(['content' => 'This is a test comment using content field'])
+			->first();
+		$this->assertNotNull($comment);
 
 		Configure::delete('Comments.controllerModels');
 	}

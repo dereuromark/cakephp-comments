@@ -52,12 +52,40 @@ $url = $this->Comments->url('Posts', $post->id);
 
 // Use in a form
 echo $this->Form->create(null, ['url' => $this->Comments->url('Posts', $post->id)]);
-echo $this->Form->control('comment');
+echo $this->Form->control('comment'); // or 'content' - both are accepted
 echo $this->Form->button(__('Submit'));
 echo $this->Form->end();
 ```
 
 The alias passed to `url()` must match a key in your `controllerModels` configuration.
+
+The form field can be named either `comment` or `content` - both are accepted.
+
+### Session Configuration (CakeDC/Users, Authentication Plugin)
+
+By default, the plugin looks for user identity under `Auth.User` session key (legacy CakePHP Auth).
+If you're using CakeDC/Users or the modern CakePHP Authentication plugin, the identity is stored under `Auth` directly.
+
+Configure the session key in your `config/app.php`:
+
+```php
+'Comments' => [
+    'sessionKey' => 'Auth', // For CakeDC/Users or Authentication plugin
+    // 'sessionKey' => 'Auth.User', // Default (legacy Auth)
+    'userIdField' => 'id', // The field in the user identity containing the user ID
+    'controllerModels' => [
+        // ...
+    ],
+],
+```
+
+If using the CommentComponent, you can also configure it per-controller:
+
+```php
+$this->loadComponent('Comments.Comment', [
+    'sessionKey' => 'Auth',
+]);
+```
 
 ## Admin Backend
 Go to `/admin/comments`.
