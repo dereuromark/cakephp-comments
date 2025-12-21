@@ -22,7 +22,42 @@ PRG redirect pattern interfering, or another `request->is('post')` check in that
 
 Make sure to set ACL for this controller if only logged in people are allowed to comment.
 
-The `Comments.Comments` helper has a `url()` method you can use to get here the URL to post to.
+#### Configuration
+
+You need to whitelist which models are allowed to receive comments via the controller.
+Add this to your `config/app.php`:
+
+```php
+'Comments' => [
+    'controllerModels' => [
+        'Posts' => 'Posts',              // Alias => ModelClass
+        'Articles' => 'Blog.Articles',   // Can reference plugin models
+    ],
+],
+```
+
+The key is the alias used in URLs and the helper, the value is the model class to load.
+
+#### Usage
+
+The `Comments.Comments` helper has a `url()` method to generate the form action URL:
+
+```php
+// In your template, load the helper
+$this->loadHelper('Comments.Comments');
+
+// Generate the URL for a specific entity
+$url = $this->Comments->url('Posts', $post->id);
+// Returns: /comments/comments/add/Posts/{id}
+
+// Use in a form
+echo $this->Form->create(null, ['url' => $this->Comments->url('Posts', $post->id)]);
+echo $this->Form->control('comment');
+echo $this->Form->button(__('Submit'));
+echo $this->Form->end();
+```
+
+The alias passed to `url()` must match a key in your `controllerModels` configuration.
 
 ## Admin Backend
 Go to `/admin/comments`.

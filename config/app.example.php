@@ -16,9 +16,11 @@ return [
 		'hiddenField' => null, // Auto-detect "is_hidden" //TODO
 		'approval' => false, // Set to true if you want to allow users to approve comments (uses hiddenField then) //TODO
 		'threaded' => null, // Auto-detect "parent_id" //TODO
-		// The following are allowed to use the separate controller, necessary when e.g. PRG component is in place
+		// Whitelist of models allowed to use the separate controller (necessary when e.g. PRG component is in place).
+		// Key is the alias used in URLs/helper, value is the model class to load.
+		// Example: 'Posts' => 'Posts' or 'Articles' => 'Blog.Articles'
 		'controllerModels' => [
-			'Alias' => 'MyPlugin.MyModel',
+			//'Posts' => 'Posts',
 		],
 	],
 ];
