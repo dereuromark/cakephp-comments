@@ -3,10 +3,14 @@ declare(strict_types=1);
 
 namespace Comments\Test\TestCase\Controller\Admin;
 
+use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Http\Exception\MethodNotAllowedException;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
 
 /**
+ * Comments\Controller\Admin\CommentsController Test Case
+ *
  * @uses \Comments\Controller\Admin\CommentsController
  */
 class CommentsControllerTest extends TestCase {
@@ -18,42 +22,86 @@ class CommentsControllerTest extends TestCase {
 	 */
 	protected array $fixtures = [
 		'plugin.Comments.Comments',
+		'plugin.Comments.Users',
 	];
 
 	/**
-	 * @uses \Comments\Controller\Admin\CommentsController::index()
+	 * Test edit method (POST)
 	 *
-	 * @return void
-	 */
-	public function testIndex(): void {
-		$this->markTestIncomplete('Not implemented yet.');
-	}
-
-	/**
-	 * @uses \Comments\Controller\Admin\CommentsController::view()
-	 *
-	 * @return void
-	 */
-	public function testView(): void {
-		$this->markTestIncomplete('Not implemented yet.');
-	}
-
-	/**
 	 * @uses \Comments\Controller\Admin\CommentsController::edit()
-	 *
+     *
 	 * @return void
 	 */
-	public function testEdit(): void {
-		$this->markTestIncomplete('Not implemented yet.');
+	public function testEditPost(): void {
+		$this->enableRetainFlashMessages();
+
+		$comment = $this->fetchTable('Comments.Comments')->find()->firstOrFail();
+
+		$data = [
+			'content' => 'Updated comment content',
+		];
+
+		$this->post(['prefix' => 'Admin', 'plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'edit', $comment->id], $data);
+
+		$this->assertRedirect(['action' => 'index']);
+		$this->assertFlashMessage('The comment has been saved.');
+
+		$updatedComment = $this->fetchTable('Comments.Comments')->get($comment->id);
+		$this->assertSame('Updated comment content', $updatedComment->content);
 	}
 
 	/**
-	 * @uses \Comments\Controller\Admin\CommentsController::delete()
+	 * Test delete method
 	 *
+	 * @uses \Comments\Controller\Admin\CommentsController::delete()
+     *
 	 * @return void
 	 */
 	public function testDelete(): void {
-		$this->markTestIncomplete('Not implemented yet.');
+		$this->enableRetainFlashMessages();
+
+		$comment = $this->fetchTable('Comments.Comments')->find()->firstOrFail();
+		$commentId = $comment->id;
+
+		$this->post(['prefix' => 'Admin', 'plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', $commentId]);
+
+		$this->assertRedirect(['action' => 'index']);
+		$this->assertFlashMessage('The comment has been deleted.');
+
+		$exists = $this->fetchTable('Comments.Comments')->exists(['id' => $commentId]);
+		$this->assertFalse($exists);
+	}
+
+	/**
+	 * Test delete method with invalid id
+	 *
+	 * @uses \Comments\Controller\Admin\CommentsController::delete()
+     *
+	 * @return void
+	 */
+	public function testDeleteNotFound(): void {
+		$this->disableErrorHandlerMiddleware();
+
+		$this->expectException(RecordNotFoundException::class);
+
+		$this->post(['prefix' => 'Admin', 'plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', 99999]);
+	}
+
+	/**
+	 * Test delete method only allows POST/DELETE
+	 *
+	 * @uses \Comments\Controller\Admin\CommentsController::delete()
+     *
+	 * @return void
+	 */
+	public function testDeleteGetNotAllowed(): void {
+		$this->disableErrorHandlerMiddleware();
+
+		$comment = $this->fetchTable('Comments.Comments')->find()->firstOrFail();
+
+		$this->expectException(MethodNotAllowedException::class);
+
+		$this->get(['prefix' => 'Admin', 'plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', $comment->id]);
 	}
 
 }
