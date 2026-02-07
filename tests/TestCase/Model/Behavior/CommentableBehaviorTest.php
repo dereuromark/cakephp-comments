@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Comments\Test\TestCase\Model\Behavior;
 
 use Cake\Core\Configure;
-use Cake\Http\Exception\MethodNotAllowedException;
 use Cake\ORM\Table;
 use Cake\TestSuite\TestCase;
 use Comments\Model\Behavior\CommentableBehavior;

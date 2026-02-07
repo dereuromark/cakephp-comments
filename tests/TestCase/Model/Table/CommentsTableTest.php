@@ -54,6 +54,7 @@ class CommentsTableTest extends TestCase {
 	 * Test initialize method
 	 *
 	 * @uses \Comments\Model\Table\CommentsTable::initialize()
+     *
 	 * @return void
 	 */
 	public function testInitialize(): void {
@@ -102,6 +103,7 @@ class CommentsTableTest extends TestCase {
 	 * Test validationDefault method - content required
 	 *
 	 * @uses \Comments\Model\Table\CommentsTable::validationDefault()
+     *
 	 * @return void
 	 */
 	public function testValidationContentRequired(): void {
@@ -119,6 +121,7 @@ class CommentsTableTest extends TestCase {
 	 * Test validationDefault method - model required
 	 *
 	 * @uses \Comments\Model\Table\CommentsTable::validationDefault()
+     *
 	 * @return void
 	 */
 	public function testValidationModelRequired(): void {
@@ -136,6 +139,7 @@ class CommentsTableTest extends TestCase {
 	 * Test validationDefault method - foreign_key required
 	 *
 	 * @uses \Comments\Model\Table\CommentsTable::validationDefault()
+     *
 	 * @return void
 	 */
 	public function testValidationForeignKeyRequired(): void {
@@ -153,6 +157,7 @@ class CommentsTableTest extends TestCase {
 	 * Test validationDefault method - email validation
 	 *
 	 * @uses \Comments\Model\Table\CommentsTable::validationDefault()
+     *
 	 * @return void
 	 */
 	public function testValidationEmail(): void {
@@ -172,6 +177,7 @@ class CommentsTableTest extends TestCase {
 	 * Test validationDefault method - valid email passes
 	 *
 	 * @uses \Comments\Model\Table\CommentsTable::validationDefault()
+     *
 	 * @return void
 	 */
 	public function testValidationValidEmail(): void {
@@ -190,6 +196,7 @@ class CommentsTableTest extends TestCase {
 	 * Test validationDefault method - empty email is allowed
 	 *
 	 * @uses \Comments\Model\Table\CommentsTable::validationDefault()
+     *
 	 * @return void
 	 */
 	public function testValidationEmptyEmailAllowed(): void {
@@ -207,6 +214,7 @@ class CommentsTableTest extends TestCase {
 	 * Test add method
 	 *
 	 * @uses \Comments\Model\Table\CommentsTable::add()
+     *
 	 * @return void
 	 */
 	public function testAdd(): void {
@@ -224,6 +232,7 @@ class CommentsTableTest extends TestCase {
 	 * Test add method with optional fields
 	 *
 	 * @uses \Comments\Model\Table\CommentsTable::add()
+     *
 	 * @return void
 	 */
 	public function testAddWithOptionalFields(): void {
@@ -245,6 +254,7 @@ class CommentsTableTest extends TestCase {
 	 * Test add method with user_id
 	 *
 	 * @uses \Comments\Model\Table\CommentsTable::add()
+     *
 	 * @return void
 	 */
 	public function testAddWithUserId(): void {
@@ -264,6 +274,7 @@ class CommentsTableTest extends TestCase {
 	 * Test add method with invalid data
 	 *
 	 * @uses \Comments\Model\Table\CommentsTable::add()
+     *
 	 * @return void
 	 */
 	public function testAddInvalid(): void {
@@ -280,6 +291,7 @@ class CommentsTableTest extends TestCase {
 	 * Test add method with invalid email
 	 *
 	 * @uses \Comments\Model\Table\CommentsTable::add()
+     *
 	 * @return void
 	 */
 	public function testAddInvalidEmail(): void {
@@ -299,6 +311,7 @@ class CommentsTableTest extends TestCase {
 	 * Test buildRules - parent_id exists check
 	 *
 	 * @uses \Comments\Model\Table\CommentsTable::buildRules()
+     *
 	 * @return void
 	 */
 	public function testBuildRulesParentIdExists(): void {

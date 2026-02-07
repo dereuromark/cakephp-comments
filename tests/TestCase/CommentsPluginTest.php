@@ -5,6 +5,7 @@ namespace Comments\Test\TestCase;
 
 use Cake\Console\CommandCollection;
 use Cake\Core\Container;
+use Cake\Core\PluginApplicationInterface;
 use Cake\Http\MiddlewareQueue;
 use Cake\Routing\RouteBuilder;
 use Cake\Routing\RouteCollection;
@@ -50,7 +51,7 @@ class CommentsPluginTest extends TestCase {
 	 * @return void
 	 */
 	public function testBootstrap(): void {
-		$app = $this->createMock(\Cake\Core\PluginApplicationInterface::class);
+		$app = $this->createMock(PluginApplicationInterface::class);
 
 		$this->plugin->bootstrap($app);
 

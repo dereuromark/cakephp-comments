@@ -6,7 +6,6 @@ namespace Comments\Test\TestCase\Controller\Component;
 use Cake\Controller\ComponentRegistry;
 use Cake\Core\Configure;
 use Cake\Event\Event;
-use Cake\Http\Response;
 use Cake\Http\ServerRequest;
 use Cake\Routing\RouteBuilder;
 use Cake\Routing\Router;
@@ -334,6 +333,5 @@ class CommentComponentTest extends TestCase {
 
 		$this->assertNull($event->getResult());
 	}
-
 
 }

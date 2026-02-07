@@ -4,6 +4,9 @@ declare(strict_types=1);
 namespace Comments\Test\TestCase\Controller;
 
 use Cake\Core\Configure;
+use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Http\Exception\MethodNotAllowedException;
+use Cake\Http\Exception\NotFoundException;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
 
@@ -42,6 +45,7 @@ class CommentsControllerTest extends TestCase {
 	 * Test add method with 'comment' field name
 	 *
 	 * @uses \Comments\Controller\CommentsController::add()
+     *
 	 * @return void
 	 */
 	public function testAdd(): void {
@@ -66,6 +70,7 @@ class CommentsControllerTest extends TestCase {
 	 * Test add method with 'content' field name (alternative)
 	 *
 	 * @uses \Comments\Controller\CommentsController::add()
+     *
 	 * @return void
 	 */
 	public function testAddWithContentField(): void {
@@ -93,6 +98,7 @@ class CommentsControllerTest extends TestCase {
 	 * Test add method with invalid alias throws NotFoundException
 	 *
 	 * @uses \Comments\Controller\CommentsController::add()
+     *
 	 * @return void
 	 */
 	public function testAddInvalidAlias(): void {
@@ -102,7 +108,7 @@ class CommentsControllerTest extends TestCase {
 			'comment' => 'Test',
 		];
 
-		$this->expectException(\Cake\Http\Exception\NotFoundException::class);
+		$this->expectException(NotFoundException::class);
 
 		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Invalid', 1], $data);
 	}
@@ -111,6 +117,7 @@ class CommentsControllerTest extends TestCase {
 	 * Test add method with invalid model id throws RecordNotFoundException
 	 *
 	 * @uses \Comments\Controller\CommentsController::add()
+     *
 	 * @return void
 	 */
 	public function testAddInvalidModelId(): void {
@@ -122,7 +129,7 @@ class CommentsControllerTest extends TestCase {
 			'comment' => 'Test',
 		];
 
-		$this->expectException(\Cake\Datasource\Exception\RecordNotFoundException::class);
+		$this->expectException(RecordNotFoundException::class);
 
 		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 99999], $data);
 	}
@@ -131,6 +138,7 @@ class CommentsControllerTest extends TestCase {
 	 * Test add method only allows POST/PUT/PATCH
 	 *
 	 * @uses \Comments\Controller\CommentsController::add()
+     *
 	 * @return void
 	 */
 	public function testAddGetNotAllowed(): void {
@@ -138,7 +146,7 @@ class CommentsControllerTest extends TestCase {
 
 		Configure::write('Comments.controllerModels.Posts', 'Posts');
 
-		$this->expectException(\Cake\Http\Exception\MethodNotAllowedException::class);
+		$this->expectException(MethodNotAllowedException::class);
 
 		$this->get(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 1]);
 	}
@@ -147,6 +155,7 @@ class CommentsControllerTest extends TestCase {
 	 * Test add method with empty content shows error
 	 *
 	 * @uses \Comments\Controller\CommentsController::add()
+     *
 	 * @return void
 	 */
 	public function testAddEmptyContent(): void {
@@ -169,6 +178,7 @@ class CommentsControllerTest extends TestCase {
 	 * Test add method with session user
 	 *
 	 * @uses \Comments\Controller\CommentsController::add()
+     *
 	 * @return void
 	 */
 	public function testAddWithSessionUser(): void {
@@ -197,6 +207,7 @@ class CommentsControllerTest extends TestCase {
 	 * Test add method without user (anonymous)
 	 *
 	 * @uses \Comments\Controller\CommentsController::add()
+     *
 	 * @return void
 	 */
 	public function testAddAnonymous(): void {
@@ -224,6 +235,7 @@ class CommentsControllerTest extends TestCase {
 	 * Test add method with plugin model
 	 *
 	 * @uses \Comments\Controller\CommentsController::add()
+     *
 	 * @return void
 	 */
 	public function testAddWithPluginModel(): void {
@@ -245,6 +257,7 @@ class CommentsControllerTest extends TestCase {
 	 * Test delete method
 	 *
 	 * @uses \Comments\Controller\CommentsController::delete()
+     *
 	 * @return void
 	 */
 	public function testDelete(): void {
@@ -259,6 +272,7 @@ class CommentsControllerTest extends TestCase {
 	 * Test delete method with POST and id in data
 	 *
 	 * @uses \Comments\Controller\CommentsController::delete()
+     *
 	 * @return void
 	 */
 	public function testDeleteWithDataId(): void {
@@ -276,12 +290,13 @@ class CommentsControllerTest extends TestCase {
 	 * Test delete method with invalid id throws RecordNotFoundException
 	 *
 	 * @uses \Comments\Controller\CommentsController::delete()
+     *
 	 * @return void
 	 */
 	public function testDeleteInvalidId(): void {
 		$this->disableErrorHandlerMiddleware();
 
-		$this->expectException(\Cake\Datasource\Exception\RecordNotFoundException::class);
+		$this->expectException(RecordNotFoundException::class);
 
 		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', 99999]);
 	}
@@ -290,6 +305,7 @@ class CommentsControllerTest extends TestCase {
 	 * Test delete method only allows POST/DELETE
 	 *
 	 * @uses \Comments\Controller\CommentsController::delete()
+     *
 	 * @return void
 	 */
 	public function testDeleteGetNotAllowed(): void {
@@ -297,7 +313,7 @@ class CommentsControllerTest extends TestCase {
 
 		$comment = $this->fetchTable('Comments.Comments')->find()->firstOrFail();
 
-		$this->expectException(\Cake\Http\Exception\MethodNotAllowedException::class);
+		$this->expectException(MethodNotAllowedException::class);
 
 		$this->get(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', $comment->id]);
 	}

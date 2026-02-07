@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Comments\Test\TestCase\Controller\Admin;
 
+use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Http\Exception\MethodNotAllowedException;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
 
@@ -27,6 +29,7 @@ class CommentsControllerTest extends TestCase {
 	 * Test edit method (POST)
 	 *
 	 * @uses \Comments\Controller\Admin\CommentsController::edit()
+     *
 	 * @return void
 	 */
 	public function testEditPost(): void {
@@ -51,6 +54,7 @@ class CommentsControllerTest extends TestCase {
 	 * Test delete method
 	 *
 	 * @uses \Comments\Controller\Admin\CommentsController::delete()
+     *
 	 * @return void
 	 */
 	public function testDelete(): void {
@@ -72,12 +76,13 @@ class CommentsControllerTest extends TestCase {
 	 * Test delete method with invalid id
 	 *
 	 * @uses \Comments\Controller\Admin\CommentsController::delete()
+     *
 	 * @return void
 	 */
 	public function testDeleteNotFound(): void {
 		$this->disableErrorHandlerMiddleware();
 
-		$this->expectException(\Cake\Datasource\Exception\RecordNotFoundException::class);
+		$this->expectException(RecordNotFoundException::class);
 
 		$this->post(['prefix' => 'Admin', 'plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', 99999]);
 	}
@@ -86,6 +91,7 @@ class CommentsControllerTest extends TestCase {
 	 * Test delete method only allows POST/DELETE
 	 *
 	 * @uses \Comments\Controller\Admin\CommentsController::delete()
+     *
 	 * @return void
 	 */
 	public function testDeleteGetNotAllowed(): void {
@@ -93,7 +99,7 @@ class CommentsControllerTest extends TestCase {
 
 		$comment = $this->fetchTable('Comments.Comments')->find()->firstOrFail();
 
-		$this->expectException(\Cake\Http\Exception\MethodNotAllowedException::class);
+		$this->expectException(MethodNotAllowedException::class);
 
 		$this->get(['prefix' => 'Admin', 'plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', $comment->id]);
 	}
