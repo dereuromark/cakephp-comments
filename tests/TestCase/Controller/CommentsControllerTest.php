@@ -318,4 +318,36 @@ class CommentsControllerTest extends TestCase {
 		$this->get(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', $comment->id]);
 	}
 
+	/**
+	 * Test add method with custom userIdField
+	 *
+	 * @uses \Comments\Controller\CommentsController::add()
+     *
+	 * @return void
+	 */
+	public function testAddWithCustomUserIdField(): void {
+		$this->disableErrorHandlerMiddleware();
+		$this->enableRetainFlashMessages();
+
+		Configure::write('Comments.controllerModels.Posts', 'Posts');
+		Configure::write('Comments.userIdField', 'id');
+		$this->session(['Auth.User.id' => 1]);
+
+		$data = [
+			'comment' => 'Comment with custom userIdField',
+		];
+
+		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 1], $data);
+
+		$this->assertRedirect(['action' => 'index']);
+
+		$comment = $this->fetchTable('Comments.Comments')->find()
+			->where(['content' => 'Comment with custom userIdField'])
+			->first();
+		$this->assertNotNull($comment);
+		$this->assertSame(1, $comment->user_id);
+
+		Configure::delete('Comments.userIdField');
+	}
+
 }
