@@ -339,4 +339,131 @@ class CommentableBehaviorTest extends TestCase {
 		$this->assertFalse($this->Commentable->getConfig('countComments'));
 	}
 
+	/**
+	 * Test commentAdd returns null when validation fails
+	 *
+	 * @return void
+	 */
+	public function testCommentAddValidationFails(): void {
+		// Try to create a comment with invalid data (missing required content)
+		$options = [
+			'userId' => 1,
+			'modelId' => 1,
+			'model' => 'Posts',
+			'data' => [
+				'content' => '', // Empty content should fail validation
+			],
+		];
+
+		$result = $this->Commentable->commentAdd(null, $options);
+		$this->assertNull($result);
+	}
+
+	/**
+	 * Test initialize with userModel as array config
+	 *
+	 * @return void
+	 */
+	public function testInitializeWithUserModelArray(): void {
+		$table = $this->getTableLocator()->get('UserModelPosts', [
+			'className' => Table::class,
+			'table' => 'posts',
+		]);
+		$table->addBehavior('Comments.Commentable', [
+			'userModelAlias' => 'Members',
+			'userModel' => [
+				'className' => 'Users',
+				'foreignKey' => 'member_id',
+			],
+		]);
+
+		$behavior = $table->behaviors()->get('Commentable');
+		$this->assertSame('Members', $behavior->getConfig('userModelAlias'));
+		$this->assertIsArray($behavior->getConfig('userModel'));
+	}
+
+	/**
+	 * Test commentAdd with foreign_key in data
+	 *
+	 * @return void
+	 */
+	public function testCommentAddWithForeignKeyInData(): void {
+		$options = [
+			'userId' => 1,
+			'modelId' => 1,
+			'model' => 'Posts',
+			'data' => [
+				'content' => 'Comment with custom foreign_key',
+				'foreign_key' => 2, // Override default modelId
+			],
+		];
+
+		$result = $this->Commentable->commentAdd(null, $options);
+		$this->assertNotNull($result);
+
+		$comment = $this->getTableLocator()->get('Comments.Comments')->get($result);
+		$this->assertSame(2, $comment->foreign_key);
+	}
+
+	/**
+	 * Test commentAdd with model_id in data (alternative to foreign_key)
+	 *
+	 * @return void
+	 */
+	public function testCommentAddWithModelIdInData(): void {
+		$options = [
+			'userId' => 1,
+			'modelId' => 1,
+			'model' => 'Posts',
+			'data' => [
+				'content' => 'Comment with model_id',
+				'model_id' => 3,
+			],
+		];
+
+		$result = $this->Commentable->commentAdd(null, $options);
+		$this->assertNotNull($result);
+	}
+
+	/**
+	 * Test commentAdd with permalink option
+	 *
+	 * @return void
+	 */
+	public function testCommentAddWithPermalink(): void {
+		$options = [
+			'userId' => 1,
+			'modelId' => 1,
+			'model' => 'Posts',
+			'permalink' => 'https://example.com/posts/1',
+			'data' => [
+				'content' => 'Comment with permalink',
+			],
+		];
+
+		$result = $this->Commentable->commentAdd(null, $options);
+		$this->assertNotNull($result);
+	}
+
+	/**
+	 * Test findThreaded finder with options
+	 *
+	 * @return void
+	 */
+	public function testFindThreadedWithOptions(): void {
+		// Add comments first
+		$options = [
+			'userId' => 1,
+			'modelId' => 1,
+			'model' => 'Posts',
+			'data' => [
+				'content' => 'Test findThreaded with options',
+			],
+		];
+		$this->Commentable->commentAdd(null, $options);
+
+		$query = $this->Posts->find('threaded', parentField: 'parent_id');
+		$this->assertNotNull($query);
+	}
+
 }
