@@ -5,7 +5,8 @@
 	"keywords": [
 		"cakephp",
 		"plugin",
-		"comments"
+		"comments",
+		"admin-panel"
 	],
 	"homepage": "https://github.com/dereuromark/cakephp-comments/",
 	"license": "MIT",
