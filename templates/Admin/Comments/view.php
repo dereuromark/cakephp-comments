@@ -3,13 +3,20 @@
  * @var \App\View\AppView $this
  * @var \Comments\Model\Entity\Comment $comment
  */
+$cspNonce = (string)$this->getRequest()->getAttribute('cspNonce', '');
 ?>
 <div class="row">
     <aside class="column actions large-3 medium-4 col-sm-4 col-xs-12">
         <ul class="side-nav nav nav-pills flex-column">
             <li class="nav-item heading"><?= __('Actions') ?></li>
             <li class="nav-item"><?= $this->Html->link(__('Edit {0}', __('Comment')), ['action' => 'edit', $comment->id], ['class' => 'side-nav-item']) ?></li>
-            <li class="nav-item"><?= $this->Form->postLink(__('Delete {0}', __('Comment')), ['action' => 'delete', $comment->id], ['confirm' => __('Are you sure you want to delete # {0}?', $comment->id), 'class' => 'side-nav-item']) ?></li>
+            <li class="nav-item"><?= $this->Form->postButton(__('Delete {0}', __('Comment')), ['action' => 'delete', $comment->id], [
+                'class' => 'side-nav-item btn btn-link text-start w-100',
+                'form' => [
+                    'class' => 'd-inline',
+                    'data-confirm-message' => __('Are you sure you want to delete # {0}?', $comment->id),
+                ],
+            ]) ?></li>
             <li class="nav-item"><?= $this->Html->link(__('List {0}', __('Comments')), ['action' => 'index'], ['class' => 'side-nav-item']) ?></li>
         </ul>
     </aside>
@@ -88,7 +95,14 @@
                             <td class="actions">
                                 <?php echo $this->Html->link($this->Icon->render('view'), ['controller' => 'Comments', 'action' => 'view', $childComments->id], ['escapeTitle' => false]); ?>
                                 <?php echo $this->Html->link($this->Icon->render('edit'), ['controller' => 'Comments', 'action' => 'edit', $childComments->id], ['escapeTitle' => false]); ?>
-                                <?php echo $this->Form->postLink($this->Icon->render('delete'), ['controller' => 'Comments', 'action' => 'delete', $childComments->id], ['escapeTitle' => false, 'confirm' => __('Are you sure you want to delete # {0}?', $childComments->id)]); ?>
+                                <?php echo $this->Form->postButton($this->Icon->render('delete'), ['controller' => 'Comments', 'action' => 'delete', $childComments->id], [
+                                    'escapeTitle' => false,
+                                    'class' => 'btn btn-link p-0 align-baseline',
+                                    'form' => [
+                                        'class' => 'd-inline',
+                                        'data-confirm-message' => __('Are you sure you want to delete # {0}?', $childComments->id),
+                                    ],
+                                ]); ?>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -99,3 +113,12 @@
         </div>
     </div>
 </div>
+<script<?= $cspNonce !== '' ? ' nonce="' . h($cspNonce) . '"' : '' ?>>
+document.querySelectorAll('form[data-confirm-message]').forEach(function(form) {
+    form.addEventListener('submit', function(e) {
+        if (!confirm(this.dataset.confirmMessage)) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
