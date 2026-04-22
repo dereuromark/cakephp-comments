@@ -3,6 +3,7 @@
  * @var \App\View\AppView $this
  * @var iterable<\Comments\Model\Entity\Comment> $comments
  */
+$cspNonce = (string)$this->getRequest()->getAttribute('cspNonce', '');
 ?>
 <nav class="actions large-3 medium-4 columns col-sm-4 col-xs-12" id="actions-sidebar">
     <ul class="side-nav nav nav-pills flex-column">
@@ -52,7 +53,14 @@
                     <td class="actions">
                         <?php echo $this->Html->link($this->Icon->render('view'), ['action' => 'view', $comment->id], ['escapeTitle' => false]); ?>
                         <?php echo $this->Html->link($this->Icon->render('edit'), ['action' => 'edit', $comment->id], ['escapeTitle' => false]); ?>
-                        <?php echo $this->Form->postLink($this->Icon->render('delete'), ['action' => 'delete', $comment->id], ['escapeTitle' => false, 'confirm' => __('Are you sure you want to delete # {0}?', $comment->id)]); ?>
+                        <?php echo $this->Form->postButton($this->Icon->render('delete'), ['action' => 'delete', $comment->id], [
+                            'escapeTitle' => false,
+                            'class' => 'btn btn-link p-0 align-baseline',
+                            'form' => [
+                                'class' => 'd-inline',
+                                'data-confirm-message' => __('Are you sure you want to delete # {0}?', $comment->id),
+                            ],
+                        ]); ?>
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -62,3 +70,12 @@
 
     <?php echo $this->element('Tools.pagination'); ?>
 </div>
+<script<?= $cspNonce !== '' ? ' nonce="' . h($cspNonce) . '"' : '' ?>>
+document.querySelectorAll('form[data-confirm-message]').forEach(function(form) {
+    form.addEventListener('submit', function(e) {
+        if (!confirm(this.dataset.confirmMessage)) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
