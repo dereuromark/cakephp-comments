@@ -7,6 +7,7 @@
 [![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%208.2-8892BF.svg)](https://php.net/)
 [![License](https://poser.pugx.org/dereuromark/cakephp-comments/license.png)](https://packagist.org/packages/dereuromark/cakephp-comments)
 [![Total Downloads](https://poser.pugx.org/dereuromark/cakephp-comments/d/total.svg)](https://packagist.org/packages/dereuromark/cakephp-comments)
+[![Coding Standards](https://img.shields.io/badge/cs-PSR--2--R-purple.svg?style=flat-square)](https://github.com/php-fig-rectified/fig-rectified-standards)
 
 Comments plugin for CakePHP applications.
 
