@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Comments\Test\TestCase\Controller\Admin;
 
+use Cake\Core\Configure;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Http\Exception\MethodNotAllowedException;
 use Cake\TestSuite\IntegrationTestTrait;
@@ -24,6 +25,28 @@ class CommentsControllerTest extends TestCase {
 		'plugin.Comments.Comments',
 		'plugin.Comments.Users',
 	];
+
+	/**
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+
+		// The plugin's beforeFilter requires `Comments.adminAccess` to be a Closure
+		// returning true for permitted callers.
+		Configure::write('Comments.adminAccess', function ($request): bool {
+			return true;
+		});
+	}
+
+	/**
+	 * @return void
+	 */
+	protected function tearDown(): void {
+		Configure::delete('Comments.adminAccess');
+
+		parent::tearDown();
+	}
 
 	/**
 	 * Test edit method (POST)
