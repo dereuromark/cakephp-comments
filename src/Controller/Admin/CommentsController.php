@@ -102,11 +102,11 @@ class CommentsController extends AppController {
 		if ($this->request->is(['patch', 'post', 'put'])) {
 			$comment = $this->Comments->patchEntity($comment, $this->request->getData());
 			if ($this->Comments->save($comment)) {
-				$this->Flash->success(__('The comment has been saved.'));
+				$this->Flash->success(__d('comments', 'The comment has been saved.'));
 
 				return $this->redirect(['action' => 'index']);
 			}
-			$this->Flash->error(__('The comment could not be saved. Please, try again.'));
+			$this->Flash->error(__d('comments', 'The comment could not be saved. Please, try again.'));
 		}
 		$parentComments = $this->Comments->ParentComments->find('list', limit: 1000)->all();
 		$this->set(compact('comment', 'parentComments'));
@@ -121,9 +121,9 @@ class CommentsController extends AppController {
 		$this->request->allowMethod(['post', 'delete']);
 		$comment = $this->Comments->get($id);
 		if ($this->Comments->delete($comment)) {
-			$this->Flash->success(__('The comment has been deleted.'));
+			$this->Flash->success(__d('comments', 'The comment has been deleted.'));
 		} else {
-			$this->Flash->error(__('The comment could not be deleted. Please, try again.'));
+			$this->Flash->error(__d('comments', 'The comment could not be deleted. Please, try again.'));
 		}
 
 		return $this->redirect(['action' => 'index']);

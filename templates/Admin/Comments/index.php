@@ -7,14 +7,14 @@ $cspNonce = (string)$this->getRequest()->getAttribute('cspNonce', '');
 ?>
 <nav class="actions large-3 medium-4 columns col-sm-4 col-xs-12" id="actions-sidebar">
     <ul class="side-nav nav nav-pills flex-column">
-        <li class="nav-item heading"><?= __('Actions') ?></li>
+        <li class="nav-item heading"><?= __d('comments', 'Actions') ?></li>
         <li class="nav-item">
         </li>
     </ul>
 </nav>
 <div class="comments index content large-9 medium-8 columns col-sm-8 col-12">
 
-    <h2><?= __('Comments') ?></h2>
+    <h2><?= __d('comments', 'Comments') ?></h2>
 
     <div class="">
         <table class="table table-sm table-striped">
@@ -30,7 +30,7 @@ $cspNonce = (string)$this->getRequest()->getAttribute('cspNonce', '');
                     <th><?= $this->Paginator->sort('is_spam') ?></th>
                     <th><?= $this->Paginator->sort('created', null, ['direction' => 'desc']) ?></th>
                     <th><?= $this->Paginator->sort('modified', null, ['direction' => 'desc']) ?></th>
-                    <th class="actions"><?= __('Actions') ?></th>
+                    <th class="actions"><?= __d('comments', 'Actions') ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -58,7 +58,7 @@ $cspNonce = (string)$this->getRequest()->getAttribute('cspNonce', '');
                             'class' => 'btn btn-link p-0 align-baseline',
                             'form' => [
                                 'class' => 'd-inline',
-                                'data-confirm-message' => __('Are you sure you want to delete # {0}?', $comment->id),
+                                'data-confirm-message' => __d('comments', 'Are you sure you want to delete # {0}?', $comment->id),
                             ],
                         ]); ?>
                     </td>
