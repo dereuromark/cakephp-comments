@@ -4,7 +4,9 @@ namespace Comments\Controller;
 
 use App\Controller\AppController;
 use Cake\Core\Configure;
+use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
+use Closure;
 use TinyAuth\Controller\Component\AuthUserComponent;
 
 /**
@@ -36,6 +38,11 @@ class CommentsController extends AppController {
 	public function add($alias = null, $id = null) {
 		$this->request->allowMethod(['post', 'put', 'patch']);
 		$data = $this->request->getData();
+		$userId = $this->userId();
+
+		if (!$this->allowsAnonymous() && $userId === null) {
+			throw new ForbiddenException(__d('comments', 'Anonymous comments are disabled.'));
+		}
 
 		$model = Configure::read('Comments.controllerModels.' . $alias);
 		if (!$model) {
@@ -46,7 +53,7 @@ class CommentsController extends AppController {
 
 		$data['model'] = $model;
 		$data['foreign_key'] = $entity->get('id');
-		$data['user_id'] = $this->userId();
+		$data['user_id'] = $userId;
 		$data['content'] = $data['comment'] ?? $data['content'] ?? null;
 
 		$result = $this->Comments->add($data);
@@ -86,10 +93,39 @@ class CommentsController extends AppController {
 
 		$id = $this->request->getData('id') ?: $id;
 		$comment = $this->Comments->get($id);
+		if (!$this->canDelete($comment->user_id)) {
+			throw new ForbiddenException(__d('comments', 'You are not allowed to delete this comment.'));
+		}
 
 		$this->Comments->delete($comment);
 
 		return $this->redirect($this->referer(['action' => 'index']));
+	}
+
+	/**
+	 * @return bool
+	 */
+	protected function allowsAnonymous(): bool {
+		return (bool)Configure::read('Comments.allowAnonymous', false);
+	}
+
+	/**
+	 * @param int|null $commentUserId
+	 *
+	 * @return bool
+	 */
+	protected function canDelete(?int $commentUserId): bool {
+		$userId = $this->userId();
+		if ($userId !== null && $commentUserId !== null && $userId === $commentUserId) {
+			return true;
+		}
+
+		$gate = Configure::read('Comments.adminAccess');
+		if ($gate instanceof Closure) {
+			return $gate($this->request) === true;
+		}
+
+		return false;
 	}
 
 }

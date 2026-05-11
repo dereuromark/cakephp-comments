@@ -5,6 +5,7 @@ namespace Comments\Test\TestCase\Controller;
 
 use Cake\Core\Configure;
 use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\MethodNotAllowedException;
 use Cake\Http\Exception\NotFoundException;
 use Cake\TestSuite\IntegrationTestTrait;
@@ -36,6 +37,8 @@ class CommentsControllerTest extends TestCase {
 	 * @return void
 	 */
 	protected function tearDown(): void {
+		Configure::delete('Comments.allowAnonymous');
+		Configure::delete('Comments.adminAccess');
 		Configure::delete('Comments.controllerModels');
 
 		parent::tearDown();
@@ -52,6 +55,7 @@ class CommentsControllerTest extends TestCase {
 		$this->disableErrorHandlerMiddleware();
 		$this->enableRetainFlashMessages();
 
+		Configure::write('Comments.allowAnonymous', true);
 		Configure::write('Comments.controllerModels.Posts', 'Posts');
 
 		$data = [
@@ -76,6 +80,7 @@ class CommentsControllerTest extends TestCase {
 	public function testAddWithContentField(): void {
 		$this->disableErrorHandlerMiddleware();
 
+		Configure::write('Comments.allowAnonymous', true);
 		Configure::write('Comments.controllerModels.Posts', 'Posts');
 
 		$data = [
@@ -103,6 +108,7 @@ class CommentsControllerTest extends TestCase {
 	 */
 	public function testAddInvalidAlias(): void {
 		$this->disableErrorHandlerMiddleware();
+		Configure::write('Comments.allowAnonymous', true);
 
 		$data = [
 			'comment' => 'Test',
@@ -123,6 +129,7 @@ class CommentsControllerTest extends TestCase {
 	public function testAddInvalidModelId(): void {
 		$this->disableErrorHandlerMiddleware();
 
+		Configure::write('Comments.allowAnonymous', true);
 		Configure::write('Comments.controllerModels.Posts', 'Posts');
 
 		$data = [
@@ -144,6 +151,7 @@ class CommentsControllerTest extends TestCase {
 	public function testAddGetNotAllowed(): void {
 		$this->disableErrorHandlerMiddleware();
 
+		Configure::write('Comments.allowAnonymous', true);
 		Configure::write('Comments.controllerModels.Posts', 'Posts');
 
 		$this->expectException(MethodNotAllowedException::class);
@@ -162,6 +170,7 @@ class CommentsControllerTest extends TestCase {
 		$this->disableErrorHandlerMiddleware();
 		$this->enableRetainFlashMessages();
 
+		Configure::write('Comments.allowAnonymous', true);
 		Configure::write('Comments.controllerModels.Posts', 'Posts');
 
 		$data = [
@@ -212,15 +221,30 @@ class CommentsControllerTest extends TestCase {
 	 */
 	public function testAddAnonymous(): void {
 		$this->disableErrorHandlerMiddleware();
-		$this->enableRetainFlashMessages();
-
 		Configure::write('Comments.controllerModels.Posts', 'Posts');
 
-		$data = [
-			'comment' => 'Anonymous comment',
-		];
+		$this->expectException(ForbiddenException::class);
 
-		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 1], $data);
+		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 1], [
+			'comment' => 'Anonymous comment',
+		]);
+	}
+
+	/**
+	 * @uses \Comments\Controller\CommentsController::add()
+	 *
+	 * @return void
+	 */
+	public function testAddAnonymousAllowed(): void {
+		$this->disableErrorHandlerMiddleware();
+		$this->enableRetainFlashMessages();
+
+		Configure::write('Comments.allowAnonymous', true);
+		Configure::write('Comments.controllerModels.Posts', 'Posts');
+
+		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 1], [
+			'comment' => 'Anonymous comment',
+		]);
 
 		$this->assertRedirect(['action' => 'index']);
 
@@ -242,6 +266,7 @@ class CommentsControllerTest extends TestCase {
 		$this->disableErrorHandlerMiddleware();
 		$this->enableRetainFlashMessages();
 
+		Configure::write('Comments.allowAnonymous', true);
 		Configure::write('Comments.controllerModels.Posts', 'Posts');
 
 		$data = [
@@ -261,7 +286,15 @@ class CommentsControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testDelete(): void {
-		$comment = $this->fetchTable('Comments.Comments')->find()->firstOrFail();
+		$comment = $this->fetchTable('Comments.Comments')->saveOrFail(
+			$this->fetchTable('Comments.Comments')->newEntity([
+				'foreign_key' => 1,
+				'model' => 'Posts',
+				'user_id' => 1,
+				'content' => 'Owned comment',
+			]),
+		);
+		$this->session(['Auth.User.id' => 1]);
 
 		$this->delete(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', $comment->id]);
 
@@ -276,7 +309,15 @@ class CommentsControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testDeleteWithDataId(): void {
-		$comment = $this->fetchTable('Comments.Comments')->find()->firstOrFail();
+		$comment = $this->fetchTable('Comments.Comments')->saveOrFail(
+			$this->fetchTable('Comments.Comments')->newEntity([
+				'foreign_key' => 1,
+				'model' => 'Posts',
+				'user_id' => 1,
+				'content' => 'Owned comment via post',
+			]),
+		);
+		$this->session(['Auth.User.id' => 1]);
 
 		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete'], ['id' => $comment->id]);
 
@@ -295,6 +336,7 @@ class CommentsControllerTest extends TestCase {
 	 */
 	public function testDeleteInvalidId(): void {
 		$this->disableErrorHandlerMiddleware();
+		$this->session(['Auth.User.id' => 1]);
 
 		$this->expectException(RecordNotFoundException::class);
 
@@ -311,11 +353,59 @@ class CommentsControllerTest extends TestCase {
 	public function testDeleteGetNotAllowed(): void {
 		$this->disableErrorHandlerMiddleware();
 
-		$comment = $this->fetchTable('Comments.Comments')->find()->firstOrFail();
+		$comment = $this->fetchTable('Comments.Comments')->saveOrFail(
+			$this->fetchTable('Comments.Comments')->newEntity([
+				'foreign_key' => 1,
+				'model' => 'Posts',
+				'user_id' => 1,
+				'content' => 'Owned comment for method test',
+			]),
+		);
+		$this->session(['Auth.User.id' => 1]);
 
 		$this->expectException(MethodNotAllowedException::class);
 
 		$this->get(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', $comment->id]);
+	}
+
+	/**
+	 * @uses \Comments\Controller\CommentsController::delete()
+	 *
+	 * @return void
+	 */
+	public function testDeleteForbiddenForOtherUser(): void {
+		$this->disableErrorHandlerMiddleware();
+
+		$comment = $this->fetchTable('Comments.Comments')->saveOrFail(
+			$this->fetchTable('Comments.Comments')->newEntity([
+				'foreign_key' => 1,
+				'model' => 'Posts',
+				'user_id' => 1,
+				'content' => 'Other user comment',
+			]),
+		);
+		$this->session(['Auth.User.id' => 999]);
+
+		$this->expectException(ForbiddenException::class);
+
+		$this->delete(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', $comment->id]);
+	}
+
+	/**
+	 * @uses \Comments\Controller\CommentsController::delete()
+	 *
+	 * @return void
+	 */
+	public function testDeleteAllowedForAdminAccessGate(): void {
+		$comment = $this->fetchTable('Comments.Comments')->find()->firstOrFail();
+		Configure::write('Comments.adminAccess', static function (): bool {
+			return true;
+		});
+
+		$this->delete(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', $comment->id]);
+
+		$this->assertRedirect(['action' => 'index']);
+		$this->assertFalse($this->fetchTable('Comments.Comments')->exists(['id' => $comment->id]));
 	}
 
 	/**
