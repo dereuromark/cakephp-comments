@@ -70,6 +70,7 @@ Configure the session key in your `config/app.php`:
 
 ```php
 'Comments' => [
+    'allowAnonymous' => false, // Default: require a logged-in user for public comment creation
     'sessionKey' => 'Auth', // For CakeDC/Users or Authentication plugin
     // 'sessionKey' => 'Auth.User', // Default (legacy Auth)
     'userIdField' => 'id', // The field in the user identity containing the user ID
@@ -86,6 +87,10 @@ $this->loadComponent('Comments.Comment', [
     'sessionKey' => 'Auth',
 ]);
 ```
+
+Anonymous comments are only accepted when `Comments.allowAnonymous` is explicitly enabled.
+Public comment deletion is restricted to the comment owner, unless `Comments.adminAccess`
+grants elevated access for the current request.
 
 ## Admin Backend
 Go to `/admin/comments`.
