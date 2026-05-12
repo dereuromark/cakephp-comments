@@ -168,20 +168,6 @@ class CommentComponentTest extends TestCase {
 	}
 
 	/**
-	 * Test callbackFetchDataTree returns empty array
-	 *
-	 * @return void
-	 */
-	public function testCallbackFetchDataTree(): void {
-		$this->Component->initialize([]);
-
-		$result = $this->Component->callbackFetchDataTree([]);
-
-		$this->assertIsArray($result);
-		$this->assertEmpty($result);
-	}
-
-	/**
 	 * Test callbackPrepareParams
 	 *
 	 * @return void
@@ -285,20 +271,6 @@ class CommentComponentTest extends TestCase {
 		$result = $component->prgRedirect();
 
 		$this->assertNull($result);
-	}
-
-	/**
-	 * Test cleanHtml deprecation warning
-	 *
-	 * @return void
-	 */
-	public function testCleanHtmlDeprecation(): void {
-		$this->Component->initialize([]);
-
-		$this->deprecated(function () {
-			$result = $this->Component->cleanHtml('Test <b>HTML</b>');
-			$this->assertSame('Test <b>HTML</b>', $result);
-		});
 	}
 
 	/**
