@@ -426,49 +426,14 @@ class CommentComponent extends Component {
 
 		$id = $entity->get('id');
 		$options = compact('displayType', 'id');
-		if ($processActions) {
-			//TODO
-			//$this->_processActions($options);
-		}
 
-		try {
-			$data = $this->_call('fetchData' . Inflector::camelize($displayType), [$options]);
-		} catch (BadMethodCallException $exception) {
-			$data = $this->_call('fetchData', [$options]);
-		}
+		// Historical fetchData{Type} routing supported `flat`, `threaded`,
+		// and `tree`, but the latter two were Cake 2-shaped wrappers that
+		// referenced columns the schema never carried. Only `flat` is
+		// supported now; any other display type fails loudly via _call().
+		$data = $this->_call('fetchData' . Inflector::camelize($displayType), [$options]);
 
 		$this->Controller->set($this->viewComments, $data);
-	}
-
-	/**
-	 * Paginateable tree representation of the comment data.
-	 *
-	 * @param array<string, mixed> $options
-	 *
-	 * @return array
-	 */
-	public function callbackFetchDataTree(array $options) {
-		/*
-		$settings = $this->_prepareModel($options);
-		$settings += ['order' => ['Comment.lft' => 'asc']];
-		$paginate = $settings;
-		$paginate['limit'] = 10;
-
-		$overloadPaginate = !empty($this->Controller->paginate['Comment']) ? $this->Controller->paginate['Comment'] : [];
-		$this->Controller->Paginator->settings['Comment'] = array_merge($paginate, $overloadPaginate);
-		$data = $this->Controller->Paginator->paginate($this->Controller->{$this->modelAlias}->Comments);
-		$parents = [];
-		if (isset($data[0]['Comment'])) {
-			$rec = $data[0]['Comment'];
-			$settings['conditions'][] = ['Comment.lft <' => $rec['lft']];
-			$settings['conditions'][] = ['Comment.rght >' => $rec['rght']];
-			$parents = $this->Controller->{$this->modelAlias}->Comments->find('all', ...$settings);
-		}
-
-		return array_merge($parents, $data);
-		*/
-
-		return [];
 	}
 
 	/**
@@ -491,69 +456,6 @@ class CommentComponent extends Component {
 	}
 
 	/**
-	 * Threaded comment data, one-paginateable, the whole data is fetched.
-	 *
-	 * @param array<string, mixed> $options
-	 *
-	 * @return array
-	 */
-	public function callbackFetchDataThreaded(array $options) {
-		$Comment =&$this->Controller->{$this->modelAlias}->Comments;
-		$settings = $this->_prepareModel($options);
-		$settings['fields'] = [
-			'Comment.author_email', 'Comment.author_name', 'Comment.author_url',
-			'Comment.id', 'Comment.user_id', 'Comment.foreign_key', 'Comment.parent_id', 'Comment.approved',
-			'Comment.title', 'Comment.body', 'Comment.slug', 'Comment.created',
-			$this->Controller->{$this->modelAlias}->alias . '.' . $this->Controller->{$this->modelAlias}->primaryKey,
-			$this->userModel . '.' . $Comment->{$this->userModel}->primaryKey,
-			$this->userModel . '.' . $Comment->{$this->userModel}->displayField,
-		];
-
-		if ($Comment->{$this->userModel}->hasField('slug')) {
-			$settings['fields'][] = $this->userModel . '.slug';
-		}
-
-		$settings += [
-			'order' => [
-				'Comment.parent_id' => 'asc',
-				'Comment.created' => 'asc',
-			],
-		];
-
-		return $Comment->find('threaded', ...$settings);
-	}
-
-	/**
-	 * Default method, calls callback_fetchData
-	 *
-	 * @param array<string, mixed> $options
-	 *
-	 * @return array
-	 */
-	public function callbackFetchData($options) {
-		$this->callbackFetchDataFlat($options);
-
-		return [];
-	}
-
-	/**
-	 * Prepare model association to fetch data
-	 *
-	 * @param array<string, mixed> $options
-	 *
-	 * @return array
-	 */
-	protected function _prepareModel($options) {
-		$params = [
-			//'isAdmin' => $this->Auth->user('is_admin') == true,
-			'userModel' => $this->userModel,
-			//'userData' => $this->Auth->user(),
-		];
-
-		return $this->Controller->{$this->modelAlias}->commentBeforeFind(array_merge($params, $options));
-	}
-
-	/**
 	 * Prepare passed parameters.
 	 *
 	 * @return void
@@ -573,105 +475,6 @@ class CommentComponent extends Component {
             }
             */
 		}
-	}
-
-	/**
-	 * Handle adding comments
-	 *
-	 * @param int $modelId
-	 * @param int $commentId Parent comment id
-	 * @param string $displayType
-	 * @param array $data
-	 *
-	 * @return void
-	 */
-	public function callbackAdd($modelId, $commentId, $displayType, $data = []) {
-		if ($this->Controller->getRequest()->getData('Comment')) {
-			$data = $this->Controller->getRequest()->getData('Comment');
-			$modelName = $this->Controller->{$this->modelAlias}->getRegistryAlias();
-			$permalink = null;
-			if (method_exists($this->Controller->{$this->modelAlias}, 'permalink')) {
-				//$premalink = $this->Controller->{$this->modelAlias}->permalink($modelId);
-			}
-			$options = [
-				'userId' => $this->userId(),
-				'modelId' => $modelId,
-				'modelName' => $modelName,
-				'defaultTitle' => $this->Controller->defaultTitle ?? '',
-				'data' => $data,
-				'permalink' => $permalink,
-			];
-			$result = $this->Controller->{$this->modelAlias}->commentAdd($commentId, $options);
-
-			if ($result !== null) {
-				if ($result) {
-					try {
-						$options['commentId'] = $result;
-						$this->_call('afterAdd', [$options]);
-					} catch (BadMethodCallException $exception) {
-					}
-					$this->flash(__d('comments', 'The Comment has been saved.'));
-					$this->prgRedirect(['#' => 'comment' . $result]);
-					if (!empty($this->ajaxMode)) {
-						$this->ajaxMode = null;
-						$this->Controller->set('redirect', null);
-						if (isset($this->Controller->passedArgs['comment'])) {
-							unset($this->Controller->passedArgs['comment']);
-						}
-						$this->_call('view', [$this->commentParams['displayType'], false]);
-					}
-				} else {
-					$this->flash(__d('comments', 'The Comment could not be saved. Please, try again.'));
-				}
-			}
-		} else {
-			if (!empty($this->Controller->passedArgs['quote'])) {
-				if (!empty($this->Controller->passedArgs['comment'])) {
-					$message = $this->_call('getFormattedComment', [$this->Controller->passedArgs['comment']]);
-					if ($message) {
-						//$this->Controller->getRequest()->getData('Comment.body') = $message;
-					}
-				}
-			}
-		}
-	}
-
-	/**
-	 * Fetch and format a comment message.
-	 *
-	 * @param string $commentId
-	 *
-	 * @return string|null
-	 */
-	public function callbackgetFormattedComment($commentId) {
-		$comment = $this->Controller->{$this->modelAlias}->Comments->find('first', ...[
-			'fields' => ['Comment.body', 'Comment.title'],
-			'conditions' => ['Comment.id' => $commentId],
-		]);
-		if ($comment) {
-		} else {
-			return null;
-		}
-
-		return "[quote]\n" . $comment['Comment']['body'] . "\n[end quote]";
-	}
-
-	/**
-	 * Deletes comments
-	 *
-	 * @param string $modelId
-	 * @param string $commentId
-	 *
-	 * @return \Cake\Http\Response|null
-	 */
-	public function callbackDelete($modelId, $commentId) {
-		if ($this->Controller->{$this->modelAlias}->commentDelete($commentId)) {
-			$this->flash(__d('comments', 'The Comment has been deleted.'));
-		} else {
-			$this->flash(__d('comments', 'Error appear during comment deleting. Try later.'));
-		}
-
-		return $this->prgRedirect();
 	}
 
 	/**
@@ -772,56 +575,7 @@ class CommentComponent extends Component {
 			return call_user_func_array($callable, $args);
 		}
 
-			throw new BadMethodCallException();
-	}
-
-	/**
-	 * Non view action process method
-	 *
-	 * @param array<string, mixed> $options
-	 *
-	 * @return \Cake\Http\Response|null|void
-	 */
-	protected function _processActions(array $options) {
-		if (isset($this->Controller->passedArgs['comment'])) {
-			if ($this->getConfig('allowAnonymous') || $this->userId()) {
-				$id = $options['id'];
-				$displayType = $options['displayType'];
-
-				if (isset($this->Controller->passedArgs['comment_action'])) {
-					$commentAction = $this->Controller->passedArgs['comment_action'];
-					if (!in_array($commentAction, ['delete'])) {
-						//return $this->Controller->blackHole("CommentsComponent: unsupported comment_Action '$commentAction'");
-					}
-					$this->_call(Inflector::variable($commentAction), [$id, $this->Controller->passedArgs['comment']]);
-				} else {
-					//Configure::write('Comment.action', 'add');
-					$parent = empty($this->Controller->passedArgs['comment']) ? null : $this->Controller->passedArgs['comment'];
-					$this->_call('add', [$id, $parent, $displayType]);
-				}
-			} else {
-				//$this->Controller->Session->write('Auth.redirect', $this->Controller->request['url']);
-				$this->Controller->redirect($this->Controller->Auth->getConfig('loginAction'));
-			}
-		}
-	}
-
-	/**
-	 * Wrapping method to clean incoming html contents
-	 *
-	 * @deprecated 0.1.3 Use proper sanitization in your application layer
-	 *
-	 * @param string $text
-	 * @param string $settings
-	 *
-	 * @return string
-	 */
-	public function cleanHtml($text, $settings = 'full') {
-		deprecationWarning('CommentComponent::cleanHtml() is deprecated. Use proper sanitization in your application layer.', '0.1.3');
-
-		//$cleaner = & new CleanerHelper(new View($this->Controller));
-		//return $cleaner->clean($text, $settings);
-		return $text;
+		throw new BadMethodCallException();
 	}
 
 }
