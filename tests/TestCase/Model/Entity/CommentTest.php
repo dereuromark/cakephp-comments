@@ -13,56 +13,59 @@ use Comments\Model\Entity\Comment;
 class CommentTest extends TestCase {
 
 	/**
-	 * Test mass assignment protection for id field
+	 * Public-form fields are mass-assignable; everything else (id,
+	 * identity, relational, moderation flags) must be set explicitly via
+	 * `set()` / `patchEntity(..., accessibleFields: ...)`.
 	 *
 	 * @return void
 	 */
-	public function testIdNotMassAssignable(): void {
-		$comment = new Comment();
-		$comment->setAccess('id', false);
-
-		$comment = $comment->patch([
+	public function testOnlyPublicFieldsMassAssignable(): void {
+		$comment = new Comment([
 			'id' => 999,
+			'name' => 'John Doe',
+			'email' => 'john@example.com',
+			'title' => 'My Title',
 			'content' => 'Test comment',
 			'model' => 'Posts',
 			'foreign_key' => 1,
-		]);
+			'parent_id' => 5,
+			'user_id' => 42,
+			'is_private' => true,
+			'is_spam' => true,
+		], ['guard' => true]);
 
-		$this->assertNull($comment->id);
+		$this->assertNull($comment->id, 'id must never be mass-assignable.');
+		$this->assertSame('John Doe', $comment->name);
+		$this->assertSame('john@example.com', $comment->email);
+		$this->assertSame('My Title', $comment->title);
 		$this->assertSame('Test comment', $comment->content);
-		$this->assertSame('Posts', $comment->model);
-		$this->assertSame(1, $comment->foreign_key);
+
+		// Relational / identity / moderation columns must NOT be mass-assigned.
+		$this->assertNull($comment->model);
+		$this->assertNull($comment->foreign_key);
+		$this->assertNull($comment->parent_id);
+		$this->assertNull($comment->user_id);
+		$this->assertNull($comment->is_private);
+		$this->assertNull($comment->is_spam);
 	}
 
 	/**
-	 * Test all other fields are mass assignable
+	 * Server-trusted code can still set the protected columns explicitly
+	 * via `set()` or via an `accessibleFields` override on patchEntity.
 	 *
 	 * @return void
 	 */
-	public function testFieldsMassAssignable(): void {
-		$data = [
-			'content' => 'Test content',
-			'model' => 'Articles',
-			'foreign_key' => 123,
-			'parent_id' => 5,
-			'user_id' => 42,
-			'name' => 'John Doe',
-			'email' => 'john@example.com',
-			'is_private' => true,
-			'is_spam' => false,
-		];
+	public function testRelationalColumnsAssignableViaSet(): void {
+		$comment = new Comment();
+		$comment->set('model', 'Articles');
+		$comment->set('foreign_key', 123);
+		$comment->set('user_id', 42);
+		$comment->set('parent_id', 5);
 
-		$comment = new Comment($data);
-
-		$this->assertSame('Test content', $comment->content);
 		$this->assertSame('Articles', $comment->model);
 		$this->assertSame(123, $comment->foreign_key);
-		$this->assertSame(5, $comment->parent_id);
 		$this->assertSame(42, $comment->user_id);
-		$this->assertSame('John Doe', $comment->name);
-		$this->assertSame('john@example.com', $comment->email);
-		$this->assertTrue($comment->is_private);
-		$this->assertFalse($comment->is_spam);
+		$this->assertSame(5, $comment->parent_id);
 	}
 
 	/**
@@ -205,8 +208,16 @@ class CommentTest extends TestCase {
 
 		$this->assertFalse($comment->isAccessible('id'));
 		$this->assertTrue($comment->isAccessible('content'));
-		$this->assertTrue($comment->isAccessible('model'));
-		$this->assertTrue($comment->isAccessible('foreign_key'));
+		$this->assertTrue($comment->isAccessible('title'));
+		$this->assertTrue($comment->isAccessible('name'));
+		$this->assertTrue($comment->isAccessible('email'));
+
+		$this->assertFalse($comment->isAccessible('model'), 'Identity columns must not be mass-assignable.');
+		$this->assertFalse($comment->isAccessible('foreign_key'));
+		$this->assertFalse($comment->isAccessible('user_id'));
+		$this->assertFalse($comment->isAccessible('parent_id'));
+		$this->assertFalse($comment->isAccessible('is_private'));
+		$this->assertFalse($comment->isAccessible('is_spam'));
 	}
 
 }

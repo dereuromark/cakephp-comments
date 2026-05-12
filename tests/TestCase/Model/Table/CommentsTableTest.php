@@ -315,17 +315,18 @@ class CommentsTableTest extends TestCase {
 	 * @return void
 	 */
 	public function testBuildRulesParentIdExists(): void {
-		$data = [
+		// Identity columns + parent_id are not part of `_accessible`; the
+		// add() table method is the documented path for server-trusted
+		// fields, so it exercises the rules check at the right layer.
+		$result = $this->Comments->add([
 			'foreign_key' => 1,
 			'model' => 'Posts',
 			'content' => 'Test',
 			'parent_id' => 99999,
-		];
-		$entity = $this->Comments->newEntity($data);
-		$result = $this->Comments->save($entity);
+		]);
 
-		$this->assertFalse($result);
-		$this->assertArrayHasKey('parent_id', $entity->getErrors());
+		$this->assertTrue($result->isNew());
+		$this->assertArrayHasKey('parent_id', $result->getErrors());
 	}
 
 	/**

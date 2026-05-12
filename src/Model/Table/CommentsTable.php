@@ -91,17 +91,36 @@ class CommentsTable extends Table {
 	}
 
 	/**
+	 * Persist a new comment using server-trusted data.
+	 *
+	 * The entity's `_accessible` allowlist intentionally excludes
+	 * `user_id`, `model`, `foreign_key`, and `parent_id` so that request
+	 * bodies cannot mass-assign them. Callers of `add()` are expected to
+	 * have set those columns themselves from authenticated/server-side
+	 * state, so we allow them through here via `accessibleFields`.
+	 *
 	 * @param array $data
 	 *
 	 * @return \Comments\Model\Entity\Comment
 	 */
 	public function add(array $data): Comment {
-		$comment = $this->newEntity($data);
+		$comment = $this->patchEntity(
+			$this->newEmptyEntity(),
+			$data,
+			[
+				'accessibleFields' => [
+					'user_id' => true,
+					'model' => true,
+					'foreign_key' => true,
+					'parent_id' => true,
+				],
+			],
+		);
 		if ($comment->hasErrors()) {
 			return $comment;
 		}
 
-		$this->saveOrFail($comment);
+		$this->save($comment);
 
 		return $comment;
 	}
