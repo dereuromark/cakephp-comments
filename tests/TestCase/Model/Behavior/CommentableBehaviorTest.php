@@ -188,41 +188,47 @@ class CommentableBehaviorTest extends TestCase {
 	}
 
 	/**
-	 * Test commentAdd with parent_id in data
+	 * Threading is controlled by the first argument to commentAdd (the
+	 * parent comment id), not by request data. A `parent_id` smuggled
+	 * into `options.data` must be ignored — otherwise an attacker could
+	 * thread under any parent on the same record without going through
+	 * the parent-validity check.
 	 *
 	 * @return void
 	 */
-	public function testCommentAddWithParentInData(): void {
+	public function testCommentAddIgnoresParentIdInData(): void {
 		$commentsTable = $this->getTableLocator()->get('Comments.Comments');
 
-		// First create a parent comment
-		$parentOptions = [
+		$parentId = $this->Commentable->commentAdd(null, [
 			'userId' => 1,
 			'modelId' => 1,
 			'model' => 'Posts',
-			'data' => [
-				'content' => 'Parent comment',
-			],
-		];
-		$parentId = $this->Commentable->commentAdd(null, $parentOptions);
+			'data' => ['content' => 'Parent comment'],
+		]);
 		$this->assertNotNull($parentId);
 
-		// Now create a child comment with parent_id in data
-		$childOptions = [
+		// Threaded reply via the first arg — works.
+		$childId = $this->Commentable->commentAdd($parentId, [
+			'userId' => 1,
+			'modelId' => 1,
+			'model' => 'Posts',
+			'data' => ['content' => 'Child comment'],
+		]);
+		$this->assertNotNull($childId);
+		$this->assertSame($parentId, $commentsTable->get($childId)->parent_id);
+
+		// Smuggled parent_id in data is ignored — top-level comment, not threaded.
+		$smuggledId = $this->Commentable->commentAdd(null, [
 			'userId' => 1,
 			'modelId' => 1,
 			'model' => 'Posts',
 			'data' => [
-				'content' => 'Child comment',
+				'content' => 'Smuggled',
 				'parent_id' => $parentId,
 			],
-		];
-
-		$childId = $this->Commentable->commentAdd(null, $childOptions);
-		$this->assertNotNull($childId);
-
-		$childComment = $commentsTable->get($childId);
-		$this->assertSame($parentId, $childComment->parent_id);
+		]);
+		$this->assertNotNull($smuggledId);
+		$this->assertNull($commentsTable->get($smuggledId)->parent_id, 'parent_id from request data must NOT be honored.');
 	}
 
 	/**
@@ -383,26 +389,28 @@ class CommentableBehaviorTest extends TestCase {
 	}
 
 	/**
-	 * Test commentAdd with foreign_key in data
+	 * The previous behavior allowed `foreign_key` smuggled into
+	 * `options.data` to override the caller's `modelId` — a clean IDOR
+	 * because the controller's authoritative model id was silently
+	 * replaced by attacker-supplied request data. The comment must now
+	 * always attach to `modelId`, regardless of what `data` says.
 	 *
 	 * @return void
 	 */
-	public function testCommentAddWithForeignKeyInData(): void {
-		$options = [
+	public function testCommentAddIgnoresForeignKeyInData(): void {
+		$result = $this->Commentable->commentAdd(null, [
 			'userId' => 1,
 			'modelId' => 1,
 			'model' => 'Posts',
 			'data' => [
-				'content' => 'Comment with custom foreign_key',
-				'foreign_key' => 2, // Override default modelId
+				'content' => 'Attempted cross-record IDOR',
+				'foreign_key' => 999,
 			],
-		];
-
-		$result = $this->Commentable->commentAdd(null, $options);
+		]);
 		$this->assertNotNull($result);
 
 		$comment = $this->getTableLocator()->get('Comments.Comments')->get($result);
-		$this->assertSame(2, $comment->foreign_key);
+		$this->assertSame(1, $comment->foreign_key, 'foreign_key in request data must NOT override modelId.');
 	}
 
 	/**

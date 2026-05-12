@@ -10,6 +10,7 @@ use Cake\Http\Exception\MethodNotAllowedException;
 use Cake\Http\Exception\NotFoundException;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
+use Comments\Model\Entity\Comment;
 
 /**
  * Comments\Controller\CommentsController Test Case
@@ -42,6 +43,22 @@ class CommentsControllerTest extends TestCase {
 		Configure::delete('Comments.controllerModels');
 
 		parent::tearDown();
+	}
+
+	/**
+	 * Build a saved Comment for a test, bypassing the entity's tight
+	 * `_accessible` allowlist that blocks `user_id` / `model` / `foreign_key`
+	 * from mass assignment. Production code sets those server-side; tests
+	 * mimic that by passing `accessibleFields` explicitly.
+	 *
+	 * @param array<string, mixed> $fields
+     *
+	 * @return \Comments\Model\Entity\Comment
+	 */
+	protected function makeComment(array $fields): Comment {
+		$table = $this->fetchTable('Comments.Comments');
+
+		return $table->saveOrFail($table->newEntity($fields, ['accessibleFields' => ['*' => true]]));
 	}
 
 	/**
@@ -286,14 +303,12 @@ class CommentsControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testDelete(): void {
-		$comment = $this->fetchTable('Comments.Comments')->saveOrFail(
-			$this->fetchTable('Comments.Comments')->newEntity([
-				'foreign_key' => 1,
-				'model' => 'Posts',
-				'user_id' => 1,
-				'content' => 'Owned comment',
-			]),
-		);
+		$comment = $this->makeComment([
+			'foreign_key' => 1,
+			'model' => 'Posts',
+			'user_id' => 1,
+			'content' => 'Owned comment',
+		]);
 		$this->session(['Auth.User.id' => 1]);
 
 		$this->delete(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', $comment->id]);
@@ -309,14 +324,12 @@ class CommentsControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testDeleteWithDataId(): void {
-		$comment = $this->fetchTable('Comments.Comments')->saveOrFail(
-			$this->fetchTable('Comments.Comments')->newEntity([
-				'foreign_key' => 1,
-				'model' => 'Posts',
-				'user_id' => 1,
-				'content' => 'Owned comment via post',
-			]),
-		);
+		$comment = $this->makeComment([
+			'foreign_key' => 1,
+			'model' => 'Posts',
+			'user_id' => 1,
+			'content' => 'Owned comment via post',
+		]);
 		$this->session(['Auth.User.id' => 1]);
 
 		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete'], ['id' => $comment->id]);
@@ -353,14 +366,12 @@ class CommentsControllerTest extends TestCase {
 	public function testDeleteGetNotAllowed(): void {
 		$this->disableErrorHandlerMiddleware();
 
-		$comment = $this->fetchTable('Comments.Comments')->saveOrFail(
-			$this->fetchTable('Comments.Comments')->newEntity([
-				'foreign_key' => 1,
-				'model' => 'Posts',
-				'user_id' => 1,
-				'content' => 'Owned comment for method test',
-			]),
-		);
+		$comment = $this->makeComment([
+			'foreign_key' => 1,
+			'model' => 'Posts',
+			'user_id' => 1,
+			'content' => 'Owned comment for method test',
+		]);
 		$this->session(['Auth.User.id' => 1]);
 
 		$this->expectException(MethodNotAllowedException::class);
@@ -376,14 +387,12 @@ class CommentsControllerTest extends TestCase {
 	public function testDeleteForbiddenForOtherUser(): void {
 		$this->disableErrorHandlerMiddleware();
 
-		$comment = $this->fetchTable('Comments.Comments')->saveOrFail(
-			$this->fetchTable('Comments.Comments')->newEntity([
-				'foreign_key' => 1,
-				'model' => 'Posts',
-				'user_id' => 1,
-				'content' => 'Other user comment',
-			]),
-		);
+		$comment = $this->makeComment([
+			'foreign_key' => 1,
+			'model' => 'Posts',
+			'user_id' => 1,
+			'content' => 'Other user comment',
+		]);
 		$this->session(['Auth.User.id' => 999]);
 
 		$this->expectException(ForbiddenException::class);

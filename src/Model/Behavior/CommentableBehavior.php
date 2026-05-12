@@ -121,13 +121,11 @@ class CommentableBehavior extends Behavior {
 		}
 
 		if ($commentId) {
-			//$this->commentsTable()->id = $commentId;
 			if (
 				!$this->commentsTable()->find()
 					->where([
-						'Comment.id' => $commentId,
-						'Comment.approved' => true,
-						'Comment.foreign_key' => $options['modelId'],
+						'Comments.id' => $commentId,
+						'Comments.foreign_key' => $options['modelId'],
 					])
 					->count()
 			) {
@@ -138,14 +136,15 @@ class CommentableBehavior extends Behavior {
 		$data = $options['data'];
 		$data['content'] = $data['comment'] ?? $data['content'] ?? null;
 		if ($data) {
+			// Identity / relational columns are set unconditionally from the
+			// caller's options. The request body never decides which record
+			// or which thread a new comment lands on — otherwise a forged
+			// `foreign_key` / `parent_id` lets an attacker attach a comment
+			// to any record they like, or thread under any parent.
 			$data['user_id'] = $options['userId'];
 			$data['model'] = $options['model'];
-			if (!isset($data['foreign_key'])) {
-				$data['foreign_key'] = $options['modelId'];
-			}
-			if (!isset($data['parent_id'])) {
-				$data['parent_id'] = $commentId;
-			}
+			$data['foreign_key'] = $options['modelId'];
+			$data['parent_id'] = $commentId;
 			if (empty($data['title'])) {
 				$data['title'] = $options['defaultTitle'];
 			}
@@ -169,36 +168,27 @@ class CommentableBehavior extends Behavior {
             }
             */
 
-			$comment = $this->commentsTable()->newEntity($data);
+			$comment = $this->commentsTable()->patchEntity(
+				$this->commentsTable()->newEmptyEntity(),
+				$data,
+				[
+					'accessibleFields' => [
+						'user_id' => true,
+						'model' => true,
+						'foreign_key' => true,
+						'parent_id' => true,
+					],
+				],
+			);
 
 			if ($this->commentsTable()->behaviors()->has('Tree')) {
-				if (isset($data['foreign_key'])) {
-					$fk = $data['foreign_key'];
-				} elseif (isset($data['model_id'])) {
-					$fk = $data['model_id'];
-				} else {
-					$fk = null;
-				}
 				$this->commentsTable()->behaviors()->load('Tree', [
-					'scope' => ['Comments.foreign_key' => $fk],
+					'scope' => ['Comments.foreign_key' => $data['foreign_key']],
 				]);
 			}
 
 			if ($this->commentsTable()->save($comment)) {
-				$id = $comment->id;
-				//$data['id'] = $id;
-				//$this->commentsTable()->data[$this->commentsTable()->alias]['id'] = $id;
-				if (!isset($data['approved']) || $data['approved'] == true) {
-					//$this->changeCommentCount($Model, $modelId);
-				}
-
-				//$event = new CakeEvent('Behavior.Commentable.afterCreateComment', $Model, $this->commentsTable()->data);
-				//CakeEventManager::instance()->dispatch($event);
-				//if ($event->isStopped() && !$event->result) {
-				//    return false;
-				//}
-
-				return $id;
+				return $comment->id;
 			}
 
 			return null;

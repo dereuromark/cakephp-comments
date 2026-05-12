@@ -55,6 +55,10 @@ class CommentsController extends AppController {
 		$data['foreign_key'] = $entity->get('id');
 		$data['user_id'] = $userId;
 		$data['content'] = $data['comment'] ?? $data['content'] ?? null;
+		// The public `add` action does not support threading — clear any
+		// request-supplied parent_id so it can't be used to attach a top-level
+		// comment under an unrelated parent (cross-thread IDOR).
+		$data['parent_id'] = null;
 
 		$result = $this->Comments->add($data);
 		if ($result->isNew()) {
