@@ -92,6 +92,27 @@ Anonymous comments are only accepted when `Comments.allowAnonymous` is explicitl
 Public comment deletion is restricted to the comment owner, unless `Comments.adminAccess`
 grants elevated access for the current request.
 
+## Polymorphic foreign key type
+
+The `comments_comments.foreign_key` column type is controlled by the global `Polymorphic.type` config key (default `integer`).
+
+Supported values: `integer` | `biginteger` | `uuid` | `binaryuuid`.
+
+For the integer variants (`integer`, `biginteger`) the column signedness follows `Migrations.unsigned_primary_keys` (default: signed). For UUID variants no `signed` option is set.
+
+The concrete FK columns `user_id` and `parent_id` always remain `integer` and also follow the `Migrations.unsigned_primary_keys` signedness flag.
+
+To use UUID primary keys, add this to your `config/app.php` **before** running migrations:
+
+```php
+// config/app.php (merged into Configure at bootstrap, including the migrations CLI)
+'Polymorphic' => [
+    'type' => 'uuid', // integer (default) | biginteger | uuid | binaryuuid
+],
+```
+
+Note: this setting only affects **fresh installs**. Existing installs already have the table created; to change the column type on an existing install you need to write an app-side migration.
+
 ## Admin Backend
 Go to `/admin/comments`.
 
