@@ -1,0 +1,36 @@
+// cakephp-comments — database schema snapshot (DBML)
+//
+// A merged snapshot of all plugin migrations under config/Migrations/.
+// Hand-maintained: update it when you add a migration that changes these tables.
+// Paste into https://dbdiagram.io (or any DBML tool) to view/diagram.
+// DBML reference: https://dbml.dbdiagram.io/docs
+//
+// Polymorphic column: foreign_key stores the PK of the associated record.
+// Its type follows the Polymorphic.type config (default: integer). Set
+// Polymorphic.type to biginteger or binaryuuid to change the stored type.
+
+Project cakephp_comments {
+  database_type: 'Generic'
+  Note: 'Comments plugin tables only.'
+}
+
+Table comments_comments {
+  id integer [pk, increment]
+  foreign_key int [not null, note: 'Polymorphic foreign_key id; set Polymorphic.type to biginteger/uuid/binaryuuid to change']
+  model varchar(80) [not null]
+  user_id int [null]
+  parent_id int [null]
+  name varchar(40) [null]
+  email varchar(80) [null]
+  title varchar(80) [null]
+  content text [not null]
+  is_private boolean [not null, default: false]
+  is_spam boolean [not null, default: false]
+  created datetime [not null]
+  modified datetime [not null]
+
+  indexes {
+    user_id [name: 'comments-user_id']
+    (model, foreign_key) [name: 'comments-foreign_key']
+  }
+}
