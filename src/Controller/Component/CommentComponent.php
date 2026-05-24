@@ -212,7 +212,7 @@ class CommentComponent extends Component {
 		$model = $this->Controller->fetchTable();
 		$this->modelAlias = $model->getAlias();
 
-		$parts = explode('\\', (string) $model->getEntityClass());
+		$parts = explode('\\', (string)$model->getEntityClass());
 		$entityName = Inflector::classify(Inflector::underscore(array_pop($parts)));
 		$this->viewVariable = Inflector::variable($entityName);
 		//$this->Controller->helpers = array_merge($this->Controller->helpers, ['Comments.CommentWidget', 'Time', 'Comments.Cleaner', 'Comments.Tree']);
