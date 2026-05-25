@@ -77,7 +77,7 @@ class CommentsController extends AppController {
 			->contain(['ParentComments', 'Users']);
 		$comments = $this->paginate($query);
 
-		$this->set(['comments' => $comments]);
+		$this->set(compact('comments'));
 	}
 
 	/**
@@ -87,7 +87,7 @@ class CommentsController extends AppController {
 	 */
 	public function view($id = null) {
 		$comment = $this->Comments->get($id, contain: ['ParentComments', 'Users', 'ChildComments']);
-		$this->set(['comment' => $comment]);
+		$this->set(compact('comment'));
 	}
 
 	/**
