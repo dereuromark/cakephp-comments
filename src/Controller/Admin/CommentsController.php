@@ -107,7 +107,7 @@ class CommentsController extends AppController {
 			$this->Flash->error(__d('comments', 'The comment could not be saved. Please, try again.'));
 		}
 		$parentComments = $this->Comments->ParentComments->find('list', limit: 1000)->all();
-		$this->set(['comment' => $comment, 'parentComments' => $parentComments]);
+		$this->set(compact('comment', 'parentComments'));
 	}
 
 	/**
