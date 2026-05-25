@@ -7,12 +7,9 @@ use Cake\Core\Configure;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
 use Closure;
-use TinyAuth\Controller\Component\AuthUserComponent;
 
 /**
  * @property \Comments\Model\Table\CommentsTable $Comments
- * @property \TinyAuth\Controller\Component\AuthUserComponent $AuthUser
- * @property \TinyAuth\Controller\Component\AuthComponent $Auth
  */
 class CommentsController extends AppController {
 
@@ -24,7 +21,7 @@ class CommentsController extends AppController {
 	public function initialize(): void {
 		parent::initialize();
 
-		if (class_exists(AuthUserComponent::class)) {
+		if (class_exists('TinyAuth\\Controller\\Component\\AuthUserComponent')) {
 			$this->loadComponent('TinyAuth.AuthUser');
 		}
 	}
@@ -76,10 +73,16 @@ class CommentsController extends AppController {
 	protected function userId() {
 		$userIdField = Configure::read('Comments.userIdField') ?: 'id';
 		if ($this->components()->has('AuthUser')) {
-			return $this->AuthUser->user($userIdField);
+			$authUser = $this->components()->get('AuthUser');
+			if (method_exists($authUser, 'user')) {
+				return $authUser->user($userIdField);
+			}
 		}
 		if ($this->components()->has('Auth')) {
-			return $this->Auth->user('id');
+			$auth = $this->components()->get('Auth');
+			if (method_exists($auth, 'user')) {
+				return $auth->user('id');
+			}
 		}
 
 		$sessionKey = Configure::read('Comments.sessionKey') ?? 'Auth.User';

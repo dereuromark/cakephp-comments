@@ -345,9 +345,15 @@ class CommentComponent extends Component {
 	protected function userId() {
 		$userId = $this->getConfig('userId') ?: null;
 		if (!$userId && $this->Controller->components()->has('AuthUser')) {
-			$userId = $this->Controller->AuthUser->user($this->getConfig('userIdField'));
+			$authUser = $this->Controller->components()->get('AuthUser');
+			if (method_exists($authUser, 'user')) {
+				$userId = $authUser->user($this->getConfig('userIdField'));
+			}
 		} elseif (!$userId && $this->Controller->components()->has('Auth')) {
-			$userId = $this->Controller->Auth->user($this->getConfig('userIdField'));
+			$auth = $this->Controller->components()->get('Auth');
+			if (method_exists($auth, 'user')) {
+				$userId = $auth->user($this->getConfig('userIdField'));
+			}
 		} elseif (!$userId) {
 			$sessionKey = $this->getConfig('sessionKey') ?? Configure::read('Comments.sessionKey') ?? 'Auth.User';
 			$userId = $this->Controller->getRequest()->getSession()->read($sessionKey . '.' . $this->getConfig('userIdField'));
