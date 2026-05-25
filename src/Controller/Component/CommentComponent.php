@@ -212,7 +212,7 @@ class CommentComponent extends Component {
 		$model = $this->Controller->fetchTable();
 		$this->modelAlias = $model->getAlias();
 
-		$parts = explode('\\', $model->getEntityClass());
+		$parts = explode('\\', (string)$model->getEntityClass());
 		$entityName = Inflector::classify(Inflector::underscore(array_pop($parts)));
 		$this->viewVariable = Inflector::variable($entityName);
 		//$this->Controller->helpers = array_merge($this->Controller->helpers, ['Comments.CommentWidget', 'Time', 'Comments.Cleaner', 'Comments.Tree']);
@@ -317,11 +317,7 @@ class CommentComponent extends Component {
 			throw new RuntimeException('Entity missing for commenting');
 		}
 
-		if ($this->getConfig('useEntity')) {
-			$modelId = $entity->get('id');
-		} else {
-			$modelId = $data['id'] ?? null;
-		}
+		$modelId = $this->getConfig('useEntity') ? $entity->get('id') : $data['id'] ?? null;
 
 		$options = [
 			'userId' => $this->userId(),
@@ -425,7 +421,7 @@ class CommentComponent extends Component {
 		}
 
 		$id = $entity->get('id');
-		$options = compact('displayType', 'id');
+		$options = ['displayType' => $displayType, 'id' => $id];
 
 		// Historical fetchData{Type} routing supported `flat`, `threaded`,
 		// and `tree`, but the latter two were Cake 2-shaped wrappers that

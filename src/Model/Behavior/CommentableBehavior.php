@@ -120,17 +120,13 @@ class CommentableBehavior extends Behavior {
 			//$this->commentsTable()->permalink = $options['permalink'];
 		}
 
-		if ($commentId) {
-			if (
-				!$this->commentsTable()->find()
+		if ($commentId && !$this->commentsTable()->find()
 					->where([
 						'Comments.id' => $commentId,
 						'Comments.foreign_key' => $options['modelId'],
 					])
-					->count()
-			) {
-				throw new MethodNotAllowedException('Invalid parent id');
-			}
+					->count()) {
+			throw new MethodNotAllowedException('Invalid parent id');
 		}
 
 		$data = $options['data'];

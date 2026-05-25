@@ -58,8 +58,6 @@ class CommentsController extends AppController {
 
 		try {
 			$allowed = $gate($this->request) === true;
-		} catch (ForbiddenException $e) {
-			throw $e;
 		} catch (Throwable $e) {
 			Log::warning(sprintf('Comments.adminAccess threw %s: %s', $e::class, $e->getMessage()));
 
@@ -79,7 +77,7 @@ class CommentsController extends AppController {
 			->contain(['ParentComments', 'Users']);
 		$comments = $this->paginate($query);
 
-		$this->set(compact('comments'));
+		$this->set(['comments' => $comments]);
 	}
 
 	/**
@@ -89,7 +87,7 @@ class CommentsController extends AppController {
 	 */
 	public function view($id = null) {
 		$comment = $this->Comments->get($id, contain: ['ParentComments', 'Users', 'ChildComments']);
-		$this->set(compact('comment'));
+		$this->set(['comment' => $comment]);
 	}
 
 	/**
@@ -109,7 +107,7 @@ class CommentsController extends AppController {
 			$this->Flash->error(__d('comments', 'The comment could not be saved. Please, try again.'));
 		}
 		$parentComments = $this->Comments->ParentComments->find('list', limit: 1000)->all();
-		$this->set(compact('comment', 'parentComments'));
+		$this->set(['comment' => $comment, 'parentComments' => $parentComments]);
 	}
 
 	/**
