@@ -77,7 +77,7 @@ class CommentsController extends AppController {
 			->contain(['ParentComments', 'Users']);
 		$comments = $this->paginate($query);
 
-		$this->set(['comments' => $comments]);
+		$this->set(compact('comments'));
 	}
 
 	/**
@@ -87,7 +87,7 @@ class CommentsController extends AppController {
 	 */
 	public function view($id = null) {
 		$comment = $this->Comments->get($id, contain: ['ParentComments', 'Users', 'ChildComments']);
-		$this->set(['comment' => $comment]);
+		$this->set(compact('comment'));
 	}
 
 	/**
@@ -107,7 +107,7 @@ class CommentsController extends AppController {
 			$this->Flash->error(__d('comments', 'The comment could not be saved. Please, try again.'));
 		}
 		$parentComments = $this->Comments->ParentComments->find('list', limit: 1000)->all();
-		$this->set(['comment' => $comment, 'parentComments' => $parentComments]);
+		$this->set(compact('comment', 'parentComments'));
 	}
 
 	/**

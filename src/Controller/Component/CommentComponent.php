@@ -317,7 +317,7 @@ class CommentComponent extends Component {
 			throw new RuntimeException('Entity missing for commenting');
 		}
 
-		$modelId = $this->getConfig('useEntity') ? $entity->get('id') : $data['id'] ?? null;
+		$modelId = $this->getConfig('useEntity') ? $entity->get('id') : ($data['id'] ?? null);
 
 		$options = [
 			'userId' => $this->userId(),
