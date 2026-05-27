@@ -68,7 +68,7 @@ class CommentsController extends AppController {
 	}
 
 	/**
-	 * @return int|string|null
+	 * @return int|null
 	 */
 	protected function userId() {
 		$userIdField = Configure::read('Comments.userIdField') ?: 'id';
@@ -117,11 +117,11 @@ class CommentsController extends AppController {
 	}
 
 	/**
-	 * @param int|string|null $commentUserId
+	 * @param int|null $commentUserId
 	 *
 	 * @return bool
 	 */
-	protected function canDelete(int|string|null $commentUserId): bool {
+	protected function canDelete(?int $commentUserId): bool {
 		$userId = $this->userId();
 		if ($userId !== null && $commentUserId !== null && $userId === $commentUserId) {
 			return true;
