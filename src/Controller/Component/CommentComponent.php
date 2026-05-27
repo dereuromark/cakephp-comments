@@ -340,7 +340,7 @@ class CommentComponent extends Component {
 	}
 
 	/**
-	 * @return int|null
+	 * @return int|string|null
 	 */
 	protected function userId() {
 		$userId = $this->getConfig('userId') ?: null;

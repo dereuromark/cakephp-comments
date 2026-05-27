@@ -10,9 +10,9 @@ use Cake\ORM\Entity;
  * @property int $id
  * @property string $content
  * @property string $model
- * @property int $foreign_key
+ * @property int|string $foreign_key
  * @property int|null $parent_id
- * @property int|null $user_id
+ * @property int|string|null $user_id
  * @property \Cake\I18n\DateTime $created
  * @property \Cake\I18n\DateTime $modified
  * @property \App\Model\Entity\User|null $user
