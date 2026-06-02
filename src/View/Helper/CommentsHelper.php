@@ -26,7 +26,7 @@ class CommentsHelper extends Helper {
 	 *
 	 * @return string
 	 */
-	public function url(string $alias, int|string $id): string {
+	public function url(string $alias, string|int $id): string {
 		$model = Configure::read('Comments.controllerModels.' . $alias);
 		if (!$model) {
 			throw new NotFoundException('Invalid alias');
