@@ -12,7 +12,7 @@ use Cake\View\Helper;
 class CommentsHelper extends Helper {
 
 	/**
-	 * @var array
+	 * @var array<int|string, array<string, mixed>|string>
 	 */
 	protected array $helpers = [
 		'Url',
