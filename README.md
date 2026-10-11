@@ -11,16 +11,6 @@
 
 Comments plugin for CakePHP applications.
 
-This branch is for use with **CakePHP 5.1+**. For details see [version map](https://github.com/dereuromark/cakephp-comments/wiki#cakephp-version-map).
+Read the **[documentation website](https://dereuromark.github.io/cakephp-comments/)** for [installation](https://dereuromark.github.io/cakephp-comments/guide/installation), [getting started](https://dereuromark.github.io/cakephp-comments/guide/getting-started), and access rules.
 
-## Features
-
-The old Comments plugins don't seem to be supported anymore:
-- https://github.com/CakeDC/comments (Cake 2)
-- https://github.com/QoboLtd/cakephp-comments (Cake 3)
-
-This plugin aims to merge and revive them as modern CakePHP 5.x plugin.
-Hopefully, we can have all the features back up and working soon.
-
-### Install, Setup, Usage
-See the **[Docs](docs/README.md)** for details.
+The plugin supports forms posting to its public controller or to an application action through the Comment component. It includes a Comments association and an admin interface. Your application supplies authentication and public visibility rules.

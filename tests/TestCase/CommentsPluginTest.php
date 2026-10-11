@@ -51,7 +51,7 @@ class CommentsPluginTest extends TestCase {
 	 * @return void
 	 */
 	public function testBootstrap(): void {
-		$app = $this->createMock(PluginApplicationInterface::class);
+		$app = $this->createStub(PluginApplicationInterface::class);
 
 		$this->plugin->bootstrap($app);
 

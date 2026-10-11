@@ -5,15 +5,26 @@ namespace Comments\Test\TestCase\Controller\Admin;
 
 use Cake\Core\Configure;
 use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Event\Event;
+use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\MethodNotAllowedException;
+use Cake\Http\Exception\NotFoundException;
+use Cake\Http\Response;
+use Cake\Http\ServerRequest;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
+use Comments\Controller\Admin\CommentsController;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesMethod;
+use RuntimeException;
 
 /**
  * Comments\Controller\Admin\CommentsController Test Case
- *
- * @uses \Comments\Controller\Admin\CommentsController
  */
+#[UsesClass(CommentsController::class)]
+#[UsesMethod(CommentsController::class, 'delete')]
+#[UsesMethod(CommentsController::class, 'edit')]
 class CommentsControllerTest extends TestCase {
 
 	use IntegrationTestTrait;
@@ -44,15 +55,34 @@ class CommentsControllerTest extends TestCase {
 	 */
 	protected function tearDown(): void {
 		Configure::delete('Comments.adminAccess');
+		Configure::delete('Comments.testHostBeforeFilter');
 
 		parent::tearDown();
+	}
+
+	public function testHostRedirectIsPreservedBeforeAdminGate(): void {
+		Configure::delete('Comments.adminAccess');
+		Configure::write('Comments.testHostBeforeFilter', fn () => (new Response())->withStatus(302)->withHeader('Location', '/login'));
+
+		$this->get('/admin/comments');
+
+		$this->assertRedirect('/login');
+	}
+
+	public function testHostEventResponseIsPreservedBeforeAdminGate(): void {
+		Configure::delete('Comments.adminAccess');
+		Configure::write('Comments.testHostBeforeFilter', function ($event): void {
+			$event->setResult((new Response())->withStatus(302)->withHeader('Location', '/login'));
+		});
+
+		$this->get('/admin/comments');
+
+		$this->assertRedirect('/login');
 	}
 
 	/**
 	 * Test edit method (POST)
 	 *
-	 * @uses \Comments\Controller\Admin\CommentsController::edit()
-     *
 	 * @return void
 	 */
 	public function testEditPost(): void {
@@ -76,8 +106,6 @@ class CommentsControllerTest extends TestCase {
 	/**
 	 * Test delete method
 	 *
-	 * @uses \Comments\Controller\Admin\CommentsController::delete()
-     *
 	 * @return void
 	 */
 	public function testDelete(): void {
@@ -98,8 +126,6 @@ class CommentsControllerTest extends TestCase {
 	/**
 	 * Test delete method with invalid id
 	 *
-	 * @uses \Comments\Controller\Admin\CommentsController::delete()
-     *
 	 * @return void
 	 */
 	public function testDeleteNotFound(): void {
@@ -113,8 +139,6 @@ class CommentsControllerTest extends TestCase {
 	/**
 	 * Test delete method only allows POST/DELETE
 	 *
-	 * @uses \Comments\Controller\Admin\CommentsController::delete()
-     *
 	 * @return void
 	 */
 	public function testDeleteGetNotAllowed(): void {
@@ -125,6 +149,101 @@ class CommentsControllerTest extends TestCase {
 		$this->expectException(MethodNotAllowedException::class);
 
 		$this->get(['prefix' => 'Admin', 'plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', $comment->id]);
+	}
+
+	public function testIndexRendersWithoutToolsOrIconPlugins(): void {
+		$this->get('/admin/comments');
+
+		$this->assertResponseOk();
+		$this->assertResponseContains('Lorem ipsum');
+	}
+
+	public function testViewRendersWithoutToolsOrIconPlugins(): void {
+		$comment = $this->fetchTable('Comments.Comments')->find()->firstOrFail();
+		$this->get(['prefix' => 'Admin', 'plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'view', $comment->id]);
+
+		$this->assertResponseOk();
+		$this->assertResponseContains('Related Comments');
+	}
+
+	public function testEditUpdatesModerationWithoutReassigningRecord(): void {
+		$comment = $this->fetchTable('Comments.Comments')->find()->firstOrFail();
+		$this->post(['prefix' => 'Admin', 'plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'edit', $comment->id], [
+			'is_private' => false,
+			'is_spam' => false,
+			'model' => 'Forged',
+			'foreign_key' => 999,
+		]);
+
+		$this->assertRedirect();
+		$updated = $this->fetchTable('Comments.Comments')->get($comment->id);
+		$this->assertFalse($updated->is_private);
+		$this->assertFalse($updated->is_spam);
+		$this->assertSame($comment->model, $updated->model);
+		$this->assertSame($comment->foreign_key, $updated->foreign_key);
+	}
+
+	public function testUnexpectedGateFailureDeniesAccess(): void {
+		$this->disableErrorHandlerMiddleware();
+		Configure::write('Comments.adminAccess', static function (): never {
+			throw new RuntimeException('Private gate failure');
+		});
+		$this->expectException(ForbiddenException::class);
+		$this->expectExceptionMessage('Comments admin access denied.');
+
+		$this->get('/admin/comments');
+	}
+
+	public function testExplicitHttpExceptionFromGateIsPreserved(): void {
+		$this->disableErrorHandlerMiddleware();
+		Configure::write('Comments.adminAccess', static function (): never {
+			throw new NotFoundException('Hidden admin');
+		});
+		$this->expectException(NotFoundException::class);
+		$this->expectExceptionMessage('Hidden admin');
+
+		$this->get('/admin/comments');
+	}
+
+	#[DataProvider('hostResponseProvider')]
+	public function testHostResponseStopsListenersAndMarksAuthorization(bool $returned): void {
+		$authorization = new class {
+			public bool $checked = false;
+
+			public function skipAuthorization(): void {
+				$this->checked = true;
+			}
+		};
+		Configure::delete('Comments.adminAccess');
+		Configure::write('Comments.testHostBeforeFilter', static function ($event) use ($returned): ?Response {
+			$response = (new Response())->withStatus(302)->withHeader('Location', '/login');
+			if ($returned) {
+				return $response;
+			}
+			$event->setResult($response);
+
+			return null;
+		});
+		$request = (new ServerRequest())->withAttribute('authorization', $authorization);
+		$controller = new CommentsController($request);
+		$manager = $controller->getEventManager();
+		$manager->on('Controller.initialize', ['priority' => 100], static function (): never {
+			throw new RuntimeException('A later listener must not run');
+		});
+		$event = new Event('Controller.initialize', $controller);
+		$manager->dispatch($event);
+
+		$this->assertTrue($event->isStopped());
+		$this->assertInstanceOf(Response::class, $event->getResult());
+		$this->assertSame('/login', $event->getResult()->getHeaderLine('Location'));
+		$this->assertTrue($authorization->checked);
+	}
+
+	/**
+	 * @return array<string, array<bool>>
+	 */
+	public static function hostResponseProvider(): array {
+		return ['returned' => [true], 'event result' => [false]];
 	}
 
 }

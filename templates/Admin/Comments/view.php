@@ -27,7 +27,7 @@ $cspNonce = (string)$this->getRequest()->getAttribute('cspNonce', '');
             <table class="table table-striped">
                 <tr>
                     <th><?= __d('comments', 'User') ?></th>
-                    <td><?= $comment->hasValue('user') ? $this->Html->link($comment->user->username, ['controller' => 'Users', 'action' => 'view', $comment->user->id]) : '' ?></td>
+                    <td><?= $comment->hasValue('user') ? h($comment->user_id) : '' ?></td>
                 </tr>
                 <tr>
                     <th><?= __d('comments', 'Name') ?></th>
@@ -47,11 +47,11 @@ $cspNonce = (string)$this->getRequest()->getAttribute('cspNonce', '');
                 </tr>
                 <tr>
                     <th><?= __d('comments', 'Is Private') ?></th>
-                    <td><?= $this->IconSnippet->yesNo($comment->is_private) ?> <?= $comment->is_private ? __d('comments', 'Yes') : __d('comments', 'No'); ?></td>
+                    <td><?= $comment->is_private ? __d('comments', 'Yes') : __d('comments', 'No'); ?></td>
                 </tr>
                 <tr>
                     <th><?= __d('comments', 'Is Spam') ?></th>
-                    <td><?= $this->IconSnippet->yesNo($comment->is_spam) ?> <?= $comment->is_spam ? __d('comments', 'Yes') : __d('comments', 'No'); ?></td>
+                    <td><?= $comment->is_spam ? __d('comments', 'Yes') : __d('comments', 'No'); ?></td>
                 </tr>
             </table>
             <div class="text">
@@ -93,9 +93,9 @@ $cspNonce = (string)$this->getRequest()->getAttribute('cspNonce', '');
                             <td><?= h($childComments->created) ?></td>
                             <td><?= h($childComments->modified) ?></td>
                             <td class="actions">
-                                <?php echo $this->Html->link($this->Icon->render('view'), ['controller' => 'Comments', 'action' => 'view', $childComments->id], ['escapeTitle' => false]); ?>
-                                <?php echo $this->Html->link($this->Icon->render('edit'), ['controller' => 'Comments', 'action' => 'edit', $childComments->id], ['escapeTitle' => false]); ?>
-                                <?php echo $this->Form->postButton($this->Icon->render('delete'), ['controller' => 'Comments', 'action' => 'delete', $childComments->id], [
+                                <?php echo $this->Html->link(__d('comments', 'View'), ['controller' => 'Comments', 'action' => 'view', $childComments->id], ['escapeTitle' => false]); ?>
+                                <?php echo $this->Html->link(__d('comments', 'Edit'), ['controller' => 'Comments', 'action' => 'edit', $childComments->id], ['escapeTitle' => false]); ?>
+                                <?php echo $this->Form->postButton(__d('comments', 'Delete'), ['controller' => 'Comments', 'action' => 'delete', $childComments->id], [
                                     'escapeTitle' => false,
                                     'class' => 'btn btn-link p-0 align-baseline',
                                     'form' => [

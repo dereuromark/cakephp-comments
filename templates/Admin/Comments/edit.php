@@ -2,8 +2,8 @@
 /**
  * @var \App\View\AppView $this
  * @var \Comments\Model\Entity\Comment $comment
- * @var string[]|\Cake\Collection\CollectionInterface $parentComments
- * @var string[]|\Cake\Collection\CollectionInterface $users
+ * @var \Cake\Collection\CollectionInterface|string[] $parentComments
+ * @var \Cake\Collection\CollectionInterface|string[] $users
  */
 $cspNonce = (string)$this->getRequest()->getAttribute('cspNonce', '');
 ?>
@@ -12,16 +12,16 @@ $cspNonce = (string)$this->getRequest()->getAttribute('cspNonce', '');
         <ul class="side-nav nav nav-pills flex-column">
             <li class="nav-item heading"><?= __d('comments', 'Actions') ?></li>
             <li class="nav-item"><?= $this->Form->postButton(
-                __d('comments', 'Delete'),
-                ['action' => 'delete', $comment->id],
-                [
-                    'class' => 'side-nav-item btn btn-link text-start w-100',
-                    'form' => [
-                        'class' => 'd-inline',
-                        'data-confirm-message' => __d('comments', 'Are you sure you want to delete # {0}?', $comment->id),
-                    ],
-                ]
-                ) ?></li>
+				__d('comments', 'Delete'),
+				['action' => 'delete', $comment->id],
+				[
+					'class' => 'side-nav-item btn btn-link text-start w-100',
+					'form' => [
+						'class' => 'd-inline',
+						'data-confirm-message' => __d('comments', 'Are you sure you want to delete # {0}?', $comment->id),
+					],
+				],
+			) ?></li>
             <li class="nav-item"><?= $this->Html->link(__d('comments', 'List Comments'), ['action' => 'index'], ['class' => 'side-nav-item']) ?></li>
         </ul>
     </aside>
@@ -33,14 +33,14 @@ $cspNonce = (string)$this->getRequest()->getAttribute('cspNonce', '');
             <fieldset>
                 <legend><?= __d('comments', 'Edit Comment') ?></legend>
                 <?php
-                    echo $this->Form->control('model');
-                    echo $this->Form->control('foreign_key');
-                    echo $this->Form->control('name');
-                    echo $this->Form->control('email');
-                    echo $this->Form->control('content');
-                    echo $this->Form->control('is_private');
-                    echo $this->Form->control('is_spam');
-                ?>
+					echo $this->Form->control('model', ['disabled' => true]);
+					echo $this->Form->control('foreign_key', ['disabled' => true]);
+					echo $this->Form->control('name');
+					echo $this->Form->control('email');
+					echo $this->Form->control('content');
+					echo $this->Form->control('is_private');
+					echo $this->Form->control('is_spam');
+				?>
             </fieldset>
             <?= $this->Form->button(__d('comments', 'Submit')) ?>
             <?= $this->Form->end() ?>

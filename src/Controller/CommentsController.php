@@ -3,6 +3,7 @@
 namespace Comments\Controller;
 
 use App\Controller\AppController;
+use ArrayAccess;
 use Cake\Core\Configure;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
@@ -48,7 +49,7 @@ class CommentsController extends AppController {
 		$table = $this->fetchTable($model);
 		$entity = $table->get($id);
 
-		$data['model'] = $model;
+		$data['model'] = $table->getAlias();
 		$data['foreign_key'] = $entity->get('id');
 		$data['user_id'] = $userId;
 		$data['content'] = $data['comment'] ?? $data['content'] ?? null;
@@ -64,7 +65,7 @@ class CommentsController extends AppController {
 			$this->Flash->success(__d('comments', 'The comment has been saved.'));
 		}
 
-		return $this->redirect($this->referer(['action' => 'index']));
+		return $this->redirect($this->referer('/'));
 	}
 
 	/**
@@ -72,6 +73,13 @@ class CommentsController extends AppController {
 	 */
 	protected function userId() {
 		$userIdField = Configure::read('Comments.userIdField') ?: 'id';
+		$identity = $this->request->getAttribute('identity');
+		if ($identity instanceof ArrayAccess && isset($identity[$userIdField])) {
+			return $identity[$userIdField];
+		}
+		if (is_object($identity) && method_exists($identity, 'getIdentifier')) {
+			return $identity->getIdentifier();
+		}
 		if ($this->components()->has('AuthUser')) {
 			$authUser = $this->components()->get('AuthUser');
 			if (method_exists($authUser, 'user')) {
@@ -81,7 +89,7 @@ class CommentsController extends AppController {
 		if ($this->components()->has('Auth')) {
 			$auth = $this->components()->get('Auth');
 			if (method_exists($auth, 'user')) {
-				return $auth->user('id');
+				return $auth->user($userIdField);
 			}
 		}
 
@@ -106,7 +114,7 @@ class CommentsController extends AppController {
 
 		$this->Comments->delete($comment);
 
-		return $this->redirect($this->referer(['action' => 'index']));
+		return $this->redirect($this->referer('/'));
 	}
 
 	/**
@@ -123,7 +131,7 @@ class CommentsController extends AppController {
 	 */
 	protected function canDelete(?int $commentUserId): bool {
 		$userId = $this->userId();
-		if ($userId !== null && $commentUserId !== null && $userId === $commentUserId) {
+		if ($userId !== null && $commentUserId !== null && (string)$userId === (string)$commentUserId) {
 			return true;
 		}
 

@@ -53,6 +53,8 @@ class CommentsPlugin extends BasePlugin {
 				'Comments',
 				['path' => '/comments'],
 				function (RouteBuilder $builder) {
+					$builder->connect('/', ['controller' => 'Comments', 'action' => 'index']);
+
 					$builder->fallbacks();
 				},
 			);

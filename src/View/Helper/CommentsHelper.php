@@ -32,7 +32,7 @@ class CommentsHelper extends Helper {
 			throw new NotFoundException('Invalid alias');
 		}
 
-		return $this->Url->build(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', $alias, $id]);
+		return $this->Url->build(['plugin' => 'Comments', 'prefix' => false, 'controller' => 'Comments', 'action' => 'add', $alias, $id]);
 	}
 
 }
