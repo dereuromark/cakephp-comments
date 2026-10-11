@@ -50,10 +50,10 @@ $cspNonce = (string)$this->getRequest()->getAttribute('cspNonce', '');
                     <td><?= $this->Time->nice($comment->created) ?></td>
                     <td><?= $this->Time->nice($comment->modified) ?></td>
                     <td class="actions">
-                        <?php echo $this->Html->link(__d('comments', 'View'), ['action' => 'view', $comment->id], ['escapeTitle' => false]); ?>
-                        <?php echo $this->Html->link(__d('comments', 'Edit'), ['action' => 'edit', $comment->id], ['escapeTitle' => false]); ?>
+                        <?php echo $this->Html->link(__d('comments', 'View'), ['action' => 'view', $comment->id], ['escape' => false, 'escapeAttributes' => true]); ?>
+                        <?php echo $this->Html->link(__d('comments', 'Edit'), ['action' => 'edit', $comment->id], ['escape' => false, 'escapeAttributes' => true]); ?>
                         <?php echo $this->Form->postButton(__d('comments', 'Delete'), ['action' => 'delete', $comment->id], [
-                            'escapeTitle' => false,
+                            'escape' => false, 'escapeAttributes' => true,
                             'class' => 'btn btn-link p-0 align-baseline',
                             'form' => [
                                 'class' => 'd-inline',

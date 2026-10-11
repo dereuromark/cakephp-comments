@@ -93,10 +93,10 @@ $cspNonce = (string)$this->getRequest()->getAttribute('cspNonce', '');
                             <td><?= h($childComments->created) ?></td>
                             <td><?= h($childComments->modified) ?></td>
                             <td class="actions">
-                                <?php echo $this->Html->link(__d('comments', 'View'), ['controller' => 'Comments', 'action' => 'view', $childComments->id], ['escapeTitle' => false]); ?>
-                                <?php echo $this->Html->link(__d('comments', 'Edit'), ['controller' => 'Comments', 'action' => 'edit', $childComments->id], ['escapeTitle' => false]); ?>
+                                <?php echo $this->Html->link(__d('comments', 'View'), ['controller' => 'Comments', 'action' => 'view', $childComments->id], ['escape' => false, 'escapeAttributes' => true]); ?>
+                                <?php echo $this->Html->link(__d('comments', 'Edit'), ['controller' => 'Comments', 'action' => 'edit', $childComments->id], ['escape' => false, 'escapeAttributes' => true]); ?>
                                 <?php echo $this->Form->postButton(__d('comments', 'Delete'), ['controller' => 'Comments', 'action' => 'delete', $childComments->id], [
-                                    'escapeTitle' => false,
+                                    'escape' => false, 'escapeAttributes' => true,
                                     'class' => 'btn btn-link p-0 align-baseline',
                                     'form' => [
                                         'class' => 'd-inline',
