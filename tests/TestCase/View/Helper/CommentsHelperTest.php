@@ -33,7 +33,7 @@ class CommentsHelperTest extends TestCase {
 
 		Router::createRouteBuilder('/')->scope('/', function (RouteBuilder $routes) {
 			$routes->setRouteClass(DashedRoute::class);
-			$routes->plugin('Comments', ['path' => '/comments'], function (RouteBuilder $builder) {
+			$routes->plugin('Comments', function (RouteBuilder $builder) {
 				$builder->fallbacks();
 			});
 		});

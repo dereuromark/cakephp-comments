@@ -25,7 +25,7 @@ class CommentComponent extends Component {
 	/**
 	 * @var array<string, mixed>
 	 */
-	protected array $_defaultConfig = [
+	protected array $defaultConfig = [
 		'on' => 'beforeRender',
 		'userModelClass' => 'Users',
 		'userIdField' => 'id',

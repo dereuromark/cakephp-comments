@@ -99,11 +99,11 @@ class CommentsTable extends Table {
 	/**
 	 * Persist a new comment using server-trusted data.
 	 *
-	 * The entity's `_accessible` allowlist intentionally excludes
+	 * The entity's `patchable` allowlist intentionally excludes
 	 * `user_id`, `model`, `foreign_key`, and `parent_id` so that request
 	 * bodies cannot mass-assign them. Callers of `add()` are expected to
 	 * have set those columns themselves from authenticated/server-side
-	 * state, so we allow them through here via `accessibleFields`.
+	 * state, so we allow them through here via `patchableFields`.
 	 *
 	 * @param array $data
 	 *
@@ -114,7 +114,7 @@ class CommentsTable extends Table {
 			$this->newEmptyEntity(),
 			$data,
 			[
-				'accessibleFields' => [
+				'patchableFields' => [
 					'user_id' => true,
 					'model' => true,
 					'foreign_key' => true,

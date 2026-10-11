@@ -23,16 +23,18 @@ class AppController extends Controller {
 
 	/**
 	 * @param \Cake\Event\EventInterface $event
-	 * @return mixed
+	 * @return void
 	 */
-	public function beforeFilter(EventInterface $event) {
+	public function beforeFilter(EventInterface $event): void {
 		parent::beforeFilter($event);
 		$callback = Configure::read('Comments.testHostBeforeFilter');
 		if (is_callable($callback)) {
-			return $callback($event);
+			$result = $callback($event);
+			if ($result !== null) {
+				$event->setResult($result);
+			}
 		}
 
-		return null;
 	}
 
 }

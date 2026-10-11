@@ -16,7 +16,7 @@ class CommentableBehavior extends Behavior {
 	 *
 	 * @var array<string, mixed>
 	 */
-	protected array $_defaultConfig = [
+	protected array $defaultConfig = [
 		'modelClass' => null, // Auto-detect
 		'model' => null, // Stored identifier defaults to the table alias
 		'commentClass' => 'Comments.Comments',
@@ -61,18 +61,18 @@ class CommentableBehavior extends Behavior {
 	 */
 	public function initialize(array $config): void {
 		if (!$this->getConfig('modelClass')) {
-			$this->setConfig('modelClass', $this->_table->getAlias());
+			$this->setConfig('modelClass', $this->table->getAlias());
 		}
 
 		if ($this->getConfig('model') === null) {
-			$this->setConfig('model', $this->_table->getAlias());
+			$this->setConfig('model', $this->table->getAlias());
 		}
 
 		if (!is_string($this->getConfig('model')) || $this->getConfig('model') === '') {
 			throw new InvalidArgumentException('The comment model identifier must be a non-empty string.');
 		}
 
-		$this->_table->hasMany('Comments', [
+		$this->table->hasMany('Comments', [
 			'className' => $this->getConfig('commentClass'),
 			'foreignKey' => 'foreign_key',
 			'order' => 'Comments.created ASC',
@@ -82,7 +82,7 @@ class CommentableBehavior extends Behavior {
 
 		if ($this->getConfig('countComments')) {
 			$this->commentsTable()->addBehavior('CounterCache', [
-				$this->_table->getAlias() => [$this->getConfig('fieldCounter')],
+				$this->table->getAlias() => [$this->getConfig('fieldCounter')],
 			]);
 		}
 
@@ -174,7 +174,7 @@ class CommentableBehavior extends Behavior {
 				$this->commentsTable()->newEmptyEntity(),
 				$data,
 				[
-					'accessibleFields' => [
+					'patchableFields' => [
 						'user_id' => true,
 						'model' => true,
 						'foreign_key' => true,
@@ -228,15 +228,15 @@ class CommentableBehavior extends Behavior {
 	 * Create the finder comments
 	 *
 	 * @param \Cake\ORM\Query\SelectQuery $query
-	 * @param array<string, mixed> $options
+	 * @param string|int $id
 	 *
 	 * @return \Cake\ORM\Query\SelectQuery
 	 */
-	public function findComments(SelectQuery $query, array $options = []): SelectQuery {
+	public function findComments(SelectQuery $query, string|int $id): SelectQuery {
 		return $query->contain([
-			'Comments' => function (SelectQuery $q) use ($options) {
+			'Comments' => function (SelectQuery $q) use ($id) {
 				$q->contain('Users');
-				$q->where(['foreign_key' => $options['id']]);
+				$q->where(['foreign_key' => $id]);
 				if ($this->getConfig('hiddenField')) {
 					$q->where([$this->getConfig('hiddenField') => false]);
 				}
@@ -251,7 +251,7 @@ class CommentableBehavior extends Behavior {
 	 */
 	protected function commentsTable() {
 		/** @var \Comments\Model\Table\CommentsTable */
-		return $this->_table->Comments->getTarget();
+		return $this->table->Comments->getTarget();
 	}
 
 }
