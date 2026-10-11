@@ -363,4 +363,17 @@ class CommentComponentTest extends TestCase {
 		$this->assertSame('/Posts/view/1', $event->getResult()->getHeaderLine('Location'));
 	}
 
+	public function testGetBodyDoesNotCreateComment(): void {
+		$this->Component->setConfig('allowAnonymous', true);
+		$this->Controller->setRequest($this->Controller->getRequest()->withParsedBody(['content' => 'Read-only request']));
+		$this->Controller->set('post', $this->fetchTable('Posts')->get(1));
+		$comments = $this->fetchTable('Comments.Comments');
+		$count = $comments->find()->count();
+		$this->Component->startup(new Event('Controller.startup', $this->Controller));
+
+		$this->Component->beforeRender(new Event('Controller.beforeRender', $this->Controller));
+
+		$this->assertSame($count, $comments->find()->count());
+	}
+
 }

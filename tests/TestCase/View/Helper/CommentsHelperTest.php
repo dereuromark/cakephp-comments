@@ -5,6 +5,7 @@ namespace Comments\Test\TestCase\View\Helper;
 
 use Cake\Core\Configure;
 use Cake\Http\Exception\NotFoundException;
+use Cake\Http\ServerRequest;
 use Cake\Routing\Route\DashedRoute;
 use Cake\Routing\RouteBuilder;
 use Cake\Routing\Router;
@@ -91,6 +92,18 @@ class CommentsHelperTest extends TestCase {
 		$this->expectException(NotFoundException::class);
 
 		$this->helper->url('NonExistent', 1);
+	}
+
+	public function testUrlClearsAdminPrefix(): void {
+		Configure::write('Comments.controllerModels.Posts', 'Posts');
+		$request = new ServerRequest(['params' => ['prefix' => 'Admin', 'plugin' => 'Comments', 'controller' => 'Comments']]);
+		Router::setRequest($request);
+		$helper = new CommentsHelper(new View($request));
+
+		$result = $helper->url('Posts', 123);
+
+		$this->assertStringContainsString('/comments/comments/add/Posts/123', $result);
+		$this->assertStringNotContainsString('/admin/', $result);
 	}
 
 }

@@ -240,6 +240,10 @@ class CommentComponent extends Component {
 	 * @return \Cake\Http\Response|null
 	 */
 	protected function process() {
+		if (!$this->Controller->getRequest()->is(['post', 'put', 'patch'])) {
+			return null;
+		}
+
 		$data = $this->Controller->getRequest()->getData();
 		if (!array_key_exists('comment', $data) && !array_key_exists('content', $data)) {
 			return null;
