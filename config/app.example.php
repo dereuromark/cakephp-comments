@@ -8,6 +8,9 @@ return [
 		'controllerModels' => [
 			//'Posts' => 'Posts',
 		],
+		// Optional stored identifier for a single comment target only.
+		// Multiple target tables should configure distinct model keys on their behaviors.
+		//'model' => 'Blog.Posts',
 		// Applies to public creation and the Comment component.
 		'allowAnonymous' => false,
 		// Request identity is checked before auth components and this session fallback.

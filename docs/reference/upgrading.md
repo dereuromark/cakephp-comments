@@ -26,3 +26,5 @@ The new documentation separates supported behavior from historical placeholder c
 The default remains the parent table alias. To retain a historical plugin-qualified key, attach the behavior with `['model' => 'Blog.Articles']`. Reads, component/public-controller writes and parent validation use that exact identifier. Locator aliases and shared physical tables do not imply shared comment ownership.
 
 Existing mixed keys require an explicit data migration to one chosen identifier; no automatic alias fallback runs. Trusted direct calls to `commentAdd()` still supply their own `model` option. Its historical default remains null rather than the behavior setting.
+
+Custom component subclasses that reassigned the protected `$modelAlias` property to change storage should configure the behavior `model` instead. That property still identifies the controller table for diagnostics.
