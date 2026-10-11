@@ -12,6 +12,7 @@ use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Routing\Router;
 use Cake\Utility\Inflector;
+use Comments\Utility\ModelIdentifier;
 use RuntimeException;
 
 /**
@@ -402,7 +403,7 @@ class CommentComponent extends Component {
 		$relation = $this->Controller->fetchTable()->getAssociation('Comments')->getTarget();
 
 		return $this->Controller->paginate($relation->find()->where([
-			$relation->aliasField('model') => $this->modelAlias,
+			$relation->aliasField('model') . ' IN' => ModelIdentifier::aliases($this->Controller->fetchTable()),
 			$relation->aliasField('foreign_key') => $options['id'],
 		]));
 	}

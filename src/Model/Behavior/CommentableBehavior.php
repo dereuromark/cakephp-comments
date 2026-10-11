@@ -7,6 +7,7 @@ use Cake\Http\Exception\MethodNotAllowedException;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\Table;
+use Comments\Utility\ModelIdentifier;
 
 class CommentableBehavior extends Behavior {
 
@@ -66,7 +67,7 @@ class CommentableBehavior extends Behavior {
 			'className' => $this->getConfig('commentClass'),
 			'foreignKey' => 'foreign_key',
 			'order' => 'Comments.created ASC',
-			'conditions' => ['Comments.model' => "{$this->_table->getAlias()}"],
+			'conditions' => ['Comments.model IN' => ModelIdentifier::aliases($this->_table)],
 			'dependent' => true,
 		]);
 
@@ -120,7 +121,9 @@ class CommentableBehavior extends Behavior {
 					->where([
 						'Comments.id' => $commentId,
 						'Comments.foreign_key' => $options['modelId'],
-						'Comments.model' => $options['model'],
+						'Comments.model IN' => in_array($options['model'], ModelIdentifier::aliases($this->_table), true)
+							? ModelIdentifier::aliases($this->_table)
+							: [$options['model']],
 					])
 					->count()) {
 			throw new MethodNotAllowedException('Invalid parent id');
