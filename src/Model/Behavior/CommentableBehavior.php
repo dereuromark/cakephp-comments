@@ -126,15 +126,10 @@ class CommentableBehavior extends Behavior {
 			//$this->commentsTable()->permalink = $options['permalink'];
 		}
 
-		if ($commentId && $options['model'] === null) {
-			return null;
-		}
-
 		if ($commentId && !$this->commentsTable()->find()
 					->where([
 						'Comments.id' => $commentId,
 						'Comments.foreign_key' => $options['modelId'],
-						'Comments.model' => $options['model'],
 					])
 					->count()) {
 			throw new MethodNotAllowedException('Invalid parent id');
@@ -187,6 +182,21 @@ class CommentableBehavior extends Behavior {
 					],
 				],
 			);
+
+			if ($comment->hasErrors()) {
+				return null;
+			}
+
+			if ($commentId) {
+				$conditions = [
+					'Comments.id' => $commentId,
+					'Comments.foreign_key' => $comment->get('foreign_key'),
+					$comment->get('model') === null ? 'Comments.model IS' : 'Comments.model' => $comment->get('model'),
+				];
+				if (!$this->commentsTable()->find()->where($conditions)->count()) {
+					throw new MethodNotAllowedException('Invalid parent id');
+				}
+			}
 
 			if ($this->commentsTable()->save($comment)) {
 				return $comment->id;

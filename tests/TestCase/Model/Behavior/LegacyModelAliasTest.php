@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 namespace Comments\Test\TestCase\Model\Behavior;
 
+use ArrayObject;
 use Cake\Controller\ComponentRegistry;
 use Cake\Core\Configure;
 use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\Exception\MethodNotAllowedException;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Table;
@@ -175,8 +177,45 @@ class LegacyModelAliasTest extends TestCase {
 	public function testNullDirectModelPreservesReleasedValidationFailure(): void {
 		$comments = $this->fetchTable('Comments.Comments');
 		$count = $comments->find()->count();
-		$this->assertNull($this->posts->getBehavior('Commentable')->commentAdd(1, ['model' => null, 'modelId' => 1, 'data' => ['content' => 'Missing target']]));
+		foreach ([[], ['model' => null], ['model' => '']] as $modelOptions) {
+			$this->assertNull($this->posts->getBehavior('Commentable')->commentAdd(1, $modelOptions + ['modelId' => 1, 'data' => ['content' => 'Missing target']]));
+		}
 		$this->assertSame($count, $comments->find()->count());
+	}
+
+	/**
+	 * @return void
+	 */
+	public function testMissingParentStillRejectsOmittedModel(): void {
+		$this->expectException(MethodNotAllowedException::class);
+		$this->posts->getBehavior('Commentable')->commentAdd(999, ['modelId' => 1, 'data' => ['content' => 'Missing parent']]);
+	}
+
+	/**
+	 * @return void
+	 */
+	public function testMarshaledModelCanCompleteDirectReply(): void {
+		$comments = $this->fetchTable('Comments.Comments');
+		$comments->getEventManager()->on('Model.beforeMarshal', function (EventInterface $event, ArrayObject $data): void {
+			$data['model'] = 'Posts';
+		});
+		$id = $this->posts->getBehavior('Commentable')->commentAdd(1, ['modelId' => 1, 'userId' => 1, 'data' => ['content' => 'Marshaled target']]);
+		$this->assertNotNull($id);
+		$reply = $comments->get($id);
+		$this->assertSame('Posts', $reply->model);
+		$this->assertSame(1, $reply->parent_id);
+	}
+
+	/**
+	 * @return void
+	 */
+	public function testMarshaledModelStillMustMatchParent(): void {
+		$comments = $this->fetchTable('Comments.Comments');
+		$comments->getEventManager()->on('Model.beforeMarshal', function (EventInterface $event, ArrayObject $data): void {
+			$data['model'] = 'OtherPosts';
+		});
+		$this->expectException(MethodNotAllowedException::class);
+		$this->posts->getBehavior('Commentable')->commentAdd(1, ['modelId' => 1, 'userId' => 1, 'data' => ['content' => 'Wrong marshaled target']]);
 	}
 
 	/**
