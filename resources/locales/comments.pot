@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"POT-Creation-Date: 2026-05-04 04:16+0200\n"
+"POT-Creation-Date: 2026-10-11 14:41+0000\n"
 "PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
 "Last-Translator: NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
@@ -29,22 +29,22 @@ msgstr ""
 msgid "The comment has been deleted."
 msgstr ""
 
-msgid "The comment could not be deleted. Please, try again."
+msgid "Delete replies before deleting this comment."
+msgstr ""
+
+msgid "The comment could not be deleted."
+msgstr ""
+
+msgid "Anonymous comments are disabled."
 msgstr ""
 
 msgid "Could not save comment, please try again."
 msgstr ""
 
-msgid "The Comment has been saved."
+msgid "You are not allowed to delete this comment."
 msgstr ""
 
-msgid "The Comment could not be saved. Please, try again."
-msgstr ""
-
-msgid "The Comment has been deleted."
-msgstr ""
-
-msgid "Error appear during comment deleting. Try later."
+msgid "Invalid parent id."
 msgstr ""
 
 msgid "Please enter a valid email address"
@@ -69,6 +69,27 @@ msgid "Edit Comment"
 msgstr ""
 
 msgid "Submit"
+msgstr ""
+
+msgid "Yes"
+msgstr ""
+
+msgid "No"
+msgstr ""
+
+msgid "View"
+msgstr ""
+
+msgid "Edit"
+msgstr ""
+
+msgid "Pagination"
+msgstr ""
+
+msgid "Previous"
+msgstr ""
+
+msgid "Next"
 msgstr ""
 
 msgid "Edit {0}"
@@ -99,12 +120,6 @@ msgid "Modified"
 msgstr ""
 
 msgid "Is Private"
-msgstr ""
-
-msgid "Yes"
-msgstr ""
-
-msgid "No"
 msgstr ""
 
 msgid "Is Spam"
