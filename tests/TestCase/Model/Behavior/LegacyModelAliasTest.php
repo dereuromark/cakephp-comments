@@ -11,6 +11,7 @@ use Cake\Http\ServerRequest;
 use Cake\ORM\Table;
 use Cake\TestSuite\TestCase;
 use Comments\Controller\Component\CommentComponent;
+use Comments\Utility\ModelIdentifier;
 use InvalidArgumentException;
 use ReflectionProperty;
 use TestApp\Controller\AppController;
@@ -223,6 +224,20 @@ class LegacyModelAliasTest extends TestCase {
 			$this->posts->addBehavior('Comments.Commentable', ['model' => 'Posts']);
 			$this->assertSame('Posts', $this->posts->getBehavior('Commentable')->getConfig('model'));
 			$this->assertSame(['Posts'], array_column($this->posts->get(1, contain: ['Comments'])->get('comments'), 'model'));
+		} finally {
+			Configure::delete('Comments.model');
+		}
+	}
+
+	/**
+	 * @return void
+	 */
+	public function testInvalidGlobalIdentifierIsRejectedWithoutBehavior(): void {
+		$this->posts->removeBehavior('Commentable');
+		Configure::write('Comments.model', '');
+		try {
+			$this->expectException(InvalidArgumentException::class);
+			ModelIdentifier::resolve($this->posts);
 		} finally {
 			Configure::delete('Comments.model');
 		}

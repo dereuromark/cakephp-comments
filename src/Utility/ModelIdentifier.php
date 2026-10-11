@@ -4,6 +4,7 @@ namespace Comments\Utility;
 
 use Cake\Core\Configure;
 use Cake\ORM\Table;
+use InvalidArgumentException;
 
 final class ModelIdentifier {
 
@@ -17,7 +18,12 @@ final class ModelIdentifier {
 			? $table->getBehavior('Commentable')->getConfig('model')
 			: Configure::read('Comments.model');
 
-		return $model ?? $table->getAlias();
+		$model ??= $table->getAlias();
+		if (!is_string($model) || $model === '') {
+			throw new InvalidArgumentException('The comment model identifier must be a non-empty string.');
+		}
+
+		return $model;
 	}
 
 }
