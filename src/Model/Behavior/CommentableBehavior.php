@@ -228,11 +228,11 @@ class CommentableBehavior extends Behavior {
 	 * Create the finder comments
 	 *
 	 * @param \Cake\ORM\Query\SelectQuery $query
-	 * @param int|string $id
+	 * @param string|int $id
 	 *
 	 * @return \Cake\ORM\Query\SelectQuery
 	 */
-	public function findComments(SelectQuery $query, int|string $id): SelectQuery {
+	public function findComments(SelectQuery $query, string|int $id): SelectQuery {
 		return $query->contain([
 			'Comments' => function (SelectQuery $q) use ($id) {
 				$q->contain('Users');
