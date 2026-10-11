@@ -277,4 +277,18 @@ class CommentsControllerTest extends TestCase {
 		$this->assertSame('/login', $event->getResult()->getHeaderLine('Location'));
 	}
 
+	public function testDeletingParentWithRepliesShowsAdminError(): void {
+		$this->enableRetainFlashMessages();
+		$comments = $this->fetchTable('Comments.Comments');
+		$parent = $comments->add(['model' => 'Posts', 'foreign_key' => 1, 'content' => 'Parent']);
+		$reply = $comments->add(['model' => 'Posts', 'foreign_key' => 1, 'parent_id' => $parent->id, 'content' => 'Reply']);
+
+		$this->post(['prefix' => 'Admin', 'plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', $parent->id]);
+
+		$this->assertRedirect();
+		$this->assertFlashMessage('The comment could not be deleted. Please, try again.');
+		$this->assertTrue($comments->exists(['id' => $parent->id]));
+		$this->assertSame($parent->id, $comments->get($reply->id)->parent_id);
+	}
+
 }
