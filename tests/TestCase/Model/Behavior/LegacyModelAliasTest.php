@@ -172,9 +172,11 @@ class LegacyModelAliasTest extends TestCase {
 	/**
 	 * @return void
 	 */
-	public function testNullDirectModelPreservesExistingQueryRejection(): void {
-		$this->expectException(InvalidArgumentException::class);
-		$this->posts->getBehavior('Commentable')->commentAdd(1, ['model' => null, 'modelId' => 1, 'data' => ['content' => 'Missing target']]);
+	public function testNullDirectModelPreservesReleasedValidationFailure(): void {
+		$comments = $this->fetchTable('Comments.Comments');
+		$count = $comments->find()->count();
+		$this->assertNull($this->posts->getBehavior('Commentable')->commentAdd(1, ['model' => null, 'modelId' => 1, 'data' => ['content' => 'Missing target']]));
+		$this->assertSame($count, $comments->find()->count());
 	}
 
 	/**
