@@ -165,11 +165,7 @@ jobs:
         run: composer install --no-progress --prefer-dist
 
       - name: Check POT is up to date
-        run: |
-          if ! composer i18n-check; then
-            echo "::error::Translation template is out of date. Run 'composer i18n-extract' locally and commit resources/locales/."
-            exit 1
-          fi
+        run: composer i18n-check
 
       - name: Lint catalogs
         run: composer i18n-lint
