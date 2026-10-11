@@ -172,6 +172,7 @@ class CommentsControllerTest extends TestCase {
 		$this->post(['prefix' => 'Admin', 'plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'edit', $comment->id], [
 			'is_private' => false,
 			'is_spam' => false,
+			'email' => '',
 			'model' => 'Forged',
 			'foreign_key' => 999,
 		]);
@@ -274,6 +275,20 @@ class CommentsControllerTest extends TestCase {
 
 		$this->assertInstanceOf(Response::class, $event->getResult());
 		$this->assertSame('/login', $event->getResult()->getHeaderLine('Location'));
+	}
+
+	public function testDeletingParentWithRepliesShowsAdminError(): void {
+		$this->enableRetainFlashMessages();
+		$comments = $this->fetchTable('Comments.Comments');
+		$parent = $comments->add(['model' => 'Posts', 'foreign_key' => 1, 'content' => 'Parent']);
+		$reply = $comments->add(['model' => 'Posts', 'foreign_key' => 1, 'parent_id' => $parent->id, 'content' => 'Reply']);
+
+		$this->post(['prefix' => 'Admin', 'plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', $parent->id]);
+
+		$this->assertRedirect();
+		$this->assertFlashMessage('Delete replies before deleting this comment.');
+		$this->assertTrue($comments->exists(['id' => $parent->id]));
+		$this->assertSame($parent->id, $comments->get($reply->id)->parent_id);
 	}
 
 }

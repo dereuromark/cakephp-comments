@@ -4,7 +4,7 @@
 
 The plugin reads the request's `identity` attribute first. It uses `userIdField` when the identity supports `ArrayAccess`, otherwise it calls `getIdentifier()` when available. The identifier must match a `Users` record because the Comments table checks the user association before saving.
 
-If no request identity is available, it checks an available TinyAuth `AuthUser` component, then a legacy `Auth` component, and finally the configured session path. This fallback supports older integrations; it is not an authentication system.
+If no request identity is available, it uses a loaded TinyAuth `AuthUser` component, or a legacy `Auth` component if AuthUser is absent. An auth component returning no ID is authoritative: the plugin does not then reuse an older session login. The configured session path is read only when neither component is loaded. These fallbacks support older integrations; they are not an authentication system.
 
 For a session containing the user at `Auth` rather than `Auth.User`, add this to `config/app.php`:
 
@@ -39,7 +39,7 @@ Keep CSRF, form protection, and application access checks enabled. Escape user c
 
 ## Deletion
 
-The public delete action accepts POST or DELETE. The signed-in owner can delete their comment. Other callers need the `Comments.adminAccess` callback to return literal `true`. Guests cannot prove ownership through a name or email.
+The public delete action accepts POST or DELETE. The signed-in owner can delete their comment. Other callers need the `Comments.adminAccess` callback to return literal `true`. Guests cannot prove ownership through a name or email. A comment with replies cannot be deleted until those replies are removed. This preserves other users' replies and prevents dangling parent references.
 
 The separate public add action ignores submitted identity, target, and parent columns. The component also replaces identity and target columns with its configured server data and validates the supplied parent against both the model and record ID.
 

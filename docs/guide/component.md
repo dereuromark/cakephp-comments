@@ -46,7 +46,7 @@ In the view template:
 <?= $this->Paginator->numbers() ?>
 ```
 
-Only POST, PUT, and PATCH requests can create a comment. Successful submissions redirect to the current route, including its passed arguments. The component accepts `comment` or `content` as the form field. It enforces `allowAnonymous` and takes the target ID from the entity by default. Keep `useEntity` enabled; disabling it lets the component use the submitted `id`, so your application must validate access to that record.
+Only POST, PUT, and PATCH requests can create a comment. Successful submissions redirect to the current route, including its passed arguments. The component accepts `comment` or `content` as the form field. A failed save leaves the page available and sets an error flash message; render flash messages in your layout. It enforces `allowAnonymous` and takes the target ID from the entity by default. Keep `useEntity` enabled; disabling it lets the component use the submitted `id`, so your application must validate access to that record.
 
 `commentsData` contains paginated comments restricted to the current table alias and record ID. Only flat display is implemented by the component. Its default query does not filter private or spam comments.
 
@@ -68,7 +68,7 @@ public function callbackCommentsFetchDataFlat(array $options): \Cake\Datasource\
 }
 ```
 
-Adapt the table alias to your controller. A submitted `parent_id` must belong to the same model and record; the separate public controller always creates top-level comments.
+Adapt the table alias to your controller. An empty `parent_id` creates a top-level comment. A parent ID must be a positive integer or integer string and belong to the same model and record. Malformed IDs receive a 400 response. A well-formed ID that does not identify a parent on the same model and record receives a 405; the separate public controller always creates top-level comments.
 
 ## AJAX
 

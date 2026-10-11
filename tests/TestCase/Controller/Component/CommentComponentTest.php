@@ -6,6 +6,7 @@ namespace Comments\Test\TestCase\Controller\Component;
 use Cake\Controller\ComponentRegistry;
 use Cake\Core\Configure;
 use Cake\Event\Event;
+use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Response;
 use Cake\Http\ServerRequest;
@@ -14,6 +15,7 @@ use Cake\Routing\RouteBuilder;
 use Cake\Routing\Router;
 use Cake\TestSuite\TestCase;
 use Comments\Controller\Component\CommentComponent;
+use PHPUnit\Framework\Attributes\DataProvider;
 use TestApp\Controller\AppController;
 
 /**
@@ -374,6 +376,58 @@ class CommentComponentTest extends TestCase {
 		$this->Component->beforeRender(new Event('Controller.beforeRender', $this->Controller));
 
 		$this->assertSame($count, $comments->find()->count());
+	}
+
+	#[DataProvider('validParentProvider')]
+	public function testParentInputIsNormalized(string|int|null $parentId, ?int $expected): void {
+		$this->Component->setConfig('allowAnonymous', true);
+		$this->Controller->setRequest($this->Controller->getRequest()->withMethod('POST')->withParsedBody(['content' => 'Parent input', 'parent_id' => $parentId]));
+		$this->Controller->set('post', $this->fetchTable('Posts')->get(1));
+		$this->Component->startup(new Event('Controller.startup', $this->Controller));
+
+		$this->Component->beforeRender(new Event('Controller.beforeRender', $this->Controller));
+
+		$comment = $this->fetchTable('Comments.Comments')->find()->where(['content' => 'Parent input'])->firstOrFail();
+		$this->assertSame($expected, $comment->parent_id);
+	}
+
+	/**
+	 * @return array<string, array<int|string|null>>
+	 */
+	public static function validParentProvider(): array {
+		return ['empty field' => ['', null], 'null' => [null, null], 'numeric string' => ['1', 1], 'integer' => [1, 1]];
+	}
+
+	#[DataProvider('invalidParentProvider')]
+	public function testInvalidParentInputReturnsBadRequest(mixed $parentId): void {
+		$this->Component->setConfig('allowAnonymous', true);
+		$this->Controller->setRequest($this->Controller->getRequest()->withMethod('POST')->withParsedBody(['content' => 'Invalid parent', 'parent_id' => $parentId]));
+		$this->Controller->set('post', $this->fetchTable('Posts')->get(1));
+		$this->Component->startup(new Event('Controller.startup', $this->Controller));
+		$this->expectException(BadRequestException::class);
+
+		$this->Component->beforeRender(new Event('Controller.beforeRender', $this->Controller));
+	}
+
+	/**
+	 * @return array<string, array<mixed>>
+	 */
+	public static function invalidParentProvider(): array {
+		return ['text' => ['bad'], 'zero' => [0], 'negative' => [-1], 'array' => [[1]], 'boolean' => [true]];
+	}
+
+	public function testFailedSaveShowsErrorFlash(): void {
+		$this->Component->setConfig('allowAnonymous', true);
+		$this->Controller->setRequest($this->Controller->getRequest()->withMethod('POST')->withParsedBody(['content' => '']));
+		$this->Controller->set('post', $this->fetchTable('Posts')->get(1));
+		$this->Component->startup(new Event('Controller.startup', $this->Controller));
+		$event = new Event('Controller.beforeRender', $this->Controller);
+
+		$this->Component->beforeRender($event);
+
+		$this->assertNull($event->getResult());
+		$messages = $this->Controller->getRequest()->getSession()->read('Flash.flash');
+		$this->assertSame('Could not save comment, please try again.', $messages[0]['message']);
 	}
 
 }

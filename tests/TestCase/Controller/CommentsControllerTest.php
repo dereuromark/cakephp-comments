@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Comments\Test\TestCase\Controller;
 
+use Cake\Controller\Component;
 use Cake\Core\Configure;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Http\Exception\ForbiddenException;
@@ -235,6 +236,7 @@ class CommentsControllerTest extends TestCase {
 
 		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 1], [
 			'comment' => 'Anonymous comment',
+			'email' => '',
 		]);
 	}
 
@@ -250,6 +252,7 @@ class CommentsControllerTest extends TestCase {
 
 		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 1], [
 			'comment' => 'Anonymous comment',
+			'email' => '',
 		]);
 
 		$this->assertRedirect('/');
@@ -478,6 +481,37 @@ class CommentsControllerTest extends TestCase {
 
 		$this->assertRedirect();
 		$this->assertFalse($this->fetchTable('Comments.Comments')->exists(['id' => $comment->id]));
+	}
+
+	public function testDeleteParentWithRepliesPreservesBothAndShowsError(): void {
+		$this->enableRetainFlashMessages();
+		$parent = $this->makeComment(['foreign_key' => 1, 'model' => 'Posts', 'user_id' => 1, 'content' => 'Parent']);
+		$reply = $this->makeComment(['foreign_key' => 1, 'model' => 'Posts', 'parent_id' => $parent->id, 'content' => 'Reply']);
+		$this->session(['Auth.User.id' => 1]);
+
+		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', $parent->id]);
+
+		$this->assertRedirect('/');
+		$this->assertFlashMessage('Delete replies before deleting this comment.');
+		$this->assertTrue($this->fetchTable('Comments.Comments')->exists(['id' => $parent->id]));
+		$this->assertSame($parent->id, $this->fetchTable('Comments.Comments')->get($reply->id)->parent_id);
+	}
+
+	public function testSignedOutAuthComponentDoesNotUseStaleSession(): void {
+		$this->disableErrorHandlerMiddleware();
+		Configure::write('Comments.controllerModels.Posts', 'Posts');
+		$this->session(['Auth.User.id' => 1]);
+		Configure::write('Comments.testHostBeforeFilter', static function ($event): void {
+			$controller = $event->getSubject();
+			$controller->components()->set('AuthUser', new class ($controller->components()) extends Component {
+				public function user(string $field): ?int {
+					return null;
+				}
+			});
+		});
+		$this->expectException(ForbiddenException::class);
+
+		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 1], ['content' => 'Stale session']);
 	}
 
 }

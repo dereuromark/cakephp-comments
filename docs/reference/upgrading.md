@@ -6,6 +6,8 @@ Check [composer.json](https://github.com/dereuromark/cakephp-comments/blob/maste
 
 These changes belong to the development branch until a release includes them:
 
+- Blank optional email fields are accepted. Invalid parent inputs receive a 400, and failed component saves show an error flash.
+- Replies prevent deletion of their parent until they are removed. Unsupported automatic Tree attachment has been removed.
 - The component enforces `allowAnonymous`, accepts either `comment` or `content` on POST/PUT/PATCH requests, and scopes flat lists to the current model and record.
 - The component honors `viewVariable` and redirects successful submissions to the current route and passed arguments.
 - Public submissions and deletions fall back to the application home page when no local referer is available.

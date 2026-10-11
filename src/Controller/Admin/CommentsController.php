@@ -147,7 +147,9 @@ class CommentsController extends AppController {
 		if ($this->Comments->delete($comment)) {
 			$this->Flash->success(__d('comments', 'The comment has been deleted.'));
 		} else {
-			$this->Flash->error(__d('comments', 'The comment could not be deleted. Please, try again.'));
+			$this->Flash->error($comment->getError('child_comments')
+				? __d('comments', 'Delete replies before deleting this comment.')
+				: __d('comments', 'The comment could not be deleted.'));
 		}
 
 		return $this->redirect(['action' => 'index']);

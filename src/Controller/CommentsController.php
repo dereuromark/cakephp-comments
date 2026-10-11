@@ -112,7 +112,11 @@ class CommentsController extends AppController {
 			throw new ForbiddenException(__d('comments', 'You are not allowed to delete this comment.'));
 		}
 
-		$this->Comments->delete($comment);
+		if (!$this->Comments->delete($comment)) {
+			$this->Flash->error($comment->getError('child_comments')
+				? __d('comments', 'Delete replies before deleting this comment.')
+				: __d('comments', 'The comment could not be deleted.'));
+		}
 
 		return $this->redirect($this->referer('/'));
 	}
