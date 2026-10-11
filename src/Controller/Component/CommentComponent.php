@@ -52,9 +52,10 @@ class CommentComponent extends Component {
 	protected $Controller;
 
 	/**
-	 * Name of 'commentable' model
+	 * Stored comment model identifier
 	 *
-	 * Customizable in beforeFilter(), or default controller's model name is used
+	 * Initialized from the behavior configuration during startup.
+	 * Custom subclasses may override it after startup.
 	 *
 	 * @var string|null Model name
 	 */
