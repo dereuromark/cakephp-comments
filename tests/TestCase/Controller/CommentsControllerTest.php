@@ -424,7 +424,6 @@ class CommentsControllerTest extends TestCase {
 		$this->assertSame(1, $comment->user_id);
 
 		Configure::delete('Comments.userIdField');
-		Configure::delete('Comments.model');
 	}
 
 	public function testAddUsesRequestIdentityBeforeLegacySession(): void {

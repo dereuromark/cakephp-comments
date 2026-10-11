@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Comments\Test\TestCase\Model\Behavior;
 
 use Cake\Controller\ComponentRegistry;
+use Cake\Core\Configure;
 use Cake\Event\Event;
 use Cake\Http\Exception\MethodNotAllowedException;
 use Cake\Http\ServerRequest;
@@ -173,6 +174,58 @@ class LegacyModelAliasTest extends TestCase {
 	public function testNullDirectModelPreservesExistingQueryRejection(): void {
 		$this->expectException(InvalidArgumentException::class);
 		$this->posts->getBehavior('Commentable')->commentAdd(1, ['model' => null, 'modelId' => 1, 'data' => ['content' => 'Missing target']]);
+	}
+
+	/**
+	 * @return void
+	 */
+	public function testGlobalDefaultReachesAutoAttachedBehaviorAndComponent(): void {
+		$this->posts->removeBehavior('Commentable');
+		$this->posts->associations()->remove('Comments');
+		Configure::write('Comments.model', 'LegacyPosts');
+		try {
+			$controller = new class ((new ServerRequest(['params' => ['controller' => 'Posts', 'action' => 'view']]))->withHeader('X-Requested-With', 'XMLHttpRequest')->withMethod('POST')->withParsedBody(['content' => 'Global component write'])) extends AppController {
+				protected ?string $defaultTable = 'Blog.Posts';
+			};
+			$component = new CommentComponent(new ComponentRegistry($controller));
+			$component->startup(new Event('Controller.startup', $controller));
+			$this->assertSame('LegacyPosts', $this->posts->getBehavior('Commentable')->getConfig('model'));
+			$this->fetchTable('Comments.Comments')->add(['model' => 'LegacyPosts', 'foreign_key' => 1, 'content' => 'Global model comment']);
+			$this->assertSame(['LegacyPosts'], array_column($this->posts->get(1, contain: ['Comments'])->get('comments'), 'model'));
+			$this->assertSame(['LegacyPosts'], array_column(iterator_to_array($component->callbackFetchDataFlat(['id' => 1])), 'model'));
+			$component->setConfig('allowAnonymous', true);
+			$controller->set('post', $this->posts->get(1));
+			$component->beforeRender(new Event('Controller.beforeRender', $controller));
+			$this->assertSame('LegacyPosts', $this->fetchTable('Comments.Comments')->find()->where(['content' => 'Global component write'])->firstOrFail()->model);
+		} finally {
+			Configure::delete('Comments.model');
+		}
+	}
+
+	/**
+	 * @return void
+	 */
+	public function testEmptyConfiguredModelFailsDuringInitialization(): void {
+		$this->posts->removeBehavior('Commentable');
+		$this->posts->associations()->remove('Comments');
+		$this->expectException(InvalidArgumentException::class);
+		$this->posts->addBehavior('Comments.Commentable', ['model' => '']);
+	}
+
+	/**
+	 * @return void
+	 */
+	public function testLocalModelOverridesGlobalDefault(): void {
+		$this->posts->removeBehavior('Commentable');
+		$this->posts->associations()->remove('Comments');
+		Configure::write('Comments.model', 'LegacyPosts');
+		try {
+			$this->posts->addBehavior('Comments.Commentable', ['model' => 'Posts']);
+			$this->assertSame('Posts', $this->posts->getBehavior('Commentable')->getConfig('model'));
+			$this->assertSame(['Posts'], array_column($this->posts->get(1, contain: ['Comments'])->get('comments'), 'model'));
+		} finally {
+			Configure::delete('Comments.model');
+		}
 	}
 
 }
