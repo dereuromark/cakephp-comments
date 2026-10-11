@@ -25,7 +25,6 @@ class Application extends BaseApplication {
 		$routes->prefix('Admin', function (RouteBuilder $builder): void {
 			$builder->plugin(
 				'Comments',
-				['path' => '/comments'],
 				function (RouteBuilder $builder): void {
 					$builder->connect('/', ['controller' => 'Comments', 'action' => 'index']);
 

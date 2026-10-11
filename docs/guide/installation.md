@@ -1,23 +1,27 @@
 # Installation
 
-Install the plugin in your CakePHP application:
+This development branch requires CakePHP 6 and PHP 8.5. Run these commands
+in your application directory:
 
 ```sh
-composer require dereuromark/cakephp-comments
+composer config minimum-stability dev
+composer config prefer-stable true
+composer require cakephp/cakephp:^6.0@dev dereuromark/cakephp-comments:dev-cake6
 bin/cake plugin load Comments
 ```
 
-Composer checks the supported PHP and CakePHP versions. See [composer.json](https://github.com/dereuromark/cakephp-comments/blob/master/composer.json) for the dependency constraints.
+Composer checks the supported PHP and CakePHP versions. See [composer.json](https://github.com/dereuromark/cakephp-comments/blob/cake6/composer.json) for the dependency constraints.
 
 ## Create the comments table
 
 If your application does not already have the Migrations plugin, install and load it:
 
 ```sh
-composer require cakephp/migrations
+composer require cakephp/migrations:dev-fix/6.x-cakephp-compatibility
 bin/cake plugin load Migrations
 ```
 
+Migrations currently needs the upstream CakePHP 6 compatibility branch above.
 Run the Comments migrations:
 
 ```sh

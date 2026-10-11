@@ -1,5 +1,18 @@
 # Upgrading
 
+## CakePHP 6 development branch
+
+Use PHP 8.5 and the development dependencies in [Installation](../guide/installation.md).
+Host controller `beforeFilter()` methods return `void` and pass redirect responses
+through the event. Entity field permissions use `patchable` and marshalling options
+use `patchableFields`.
+
+CakePHP 6 calls custom finders with named arguments. Use
+`$posts->find('comments', id: $id)`; direct calls use
+`$behavior->findComments($query, $id)`. Behavior methods are accessed through
+`$posts->getBehavior('Commentable')`, since table method forwarding is removed.
+
+
 Check [composer.json](https://github.com/dereuromark/cakephp-comments/blob/master/composer.json) for the supported dependency versions before updating. Keep an application test for comment creation, deletion, and admin access.
 
 ## Current development changes

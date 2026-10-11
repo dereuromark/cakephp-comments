@@ -295,7 +295,7 @@ class CommentsTableTest extends TestCase {
 	 * @return void
 	 */
 	public function testBuildRulesParentIdExists(): void {
-		// Identity columns + parent_id are not part of `_accessible`; the
+		// Identity columns + parent_id are not part of `patchable`; the
 		// add() table method is the documented path for server-trusted
 		// fields, so it exercises the rules check at the right layer.
 		$result = $this->Comments->add([

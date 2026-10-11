@@ -56,9 +56,9 @@ class CommentsControllerTest extends TestCase {
 
 	/**
 	 * Build a saved Comment for a test, bypassing the entity's tight
-	 * `_accessible` allowlist that blocks `user_id` / `model` / `foreign_key`
+	 * `patchable` allowlist that blocks `user_id` / `model` / `foreign_key`
 	 * from mass assignment. Production code sets those server-side; tests
-	 * mimic that by passing `accessibleFields` explicitly.
+	 * mimic that by passing `patchableFields` explicitly.
 	 *
 	 * @param array<string, mixed> $fields
      *
@@ -67,7 +67,7 @@ class CommentsControllerTest extends TestCase {
 	protected function makeComment(array $fields): Comment {
 		$table = $this->fetchTable('Comments.Comments');
 
-		return $table->saveOrFail($table->newEntity($fields, ['accessibleFields' => ['*' => true]]));
+		return $table->saveOrFail($table->newEntity($fields, ['patchableFields' => ['*' => true]]));
 	}
 
 	/**

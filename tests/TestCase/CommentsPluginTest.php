@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Comments\Test\TestCase;
 
 use Cake\Console\CommandCollection;
-use Cake\Core\Container;
+use Cake\Container\Container;
 use Cake\Core\PluginApplicationInterface;
 use Cake\Http\MiddlewareQueue;
 use Cake\Routing\RouteBuilder;

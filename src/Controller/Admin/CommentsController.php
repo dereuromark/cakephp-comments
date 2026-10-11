@@ -42,9 +42,9 @@ class CommentsController extends AppController {
 	 * @return void
 	 */
 	public function beforeFilter(EventInterface $event): void {
-		$parentResult = parent::beforeFilter($event);
+		parent::beforeFilter($event);
 		$this->skipAdminAuthorizationCheck();
-		$response = $parentResult instanceof Response ? $parentResult : $event->getResult();
+		$response = $event->getResult();
 		if ($response instanceof Response) {
 			$event->setResult($response);
 			$event->stopPropagation();
@@ -123,7 +123,7 @@ class CommentsController extends AppController {
 		$comment = $this->Comments->get($id, contain: []);
 		if ($this->request->is(['patch', 'post', 'put'])) {
 			$comment = $this->Comments->patchEntity($comment, $this->request->getData(), [
-				'accessibleFields' => ['is_private' => true, 'is_spam' => true],
+				'patchableFields' => ['is_private' => true, 'is_spam' => true],
 			]);
 			if ($this->Comments->save($comment)) {
 				$this->Flash->success(__d('comments', 'The comment has been saved.'));

@@ -19,9 +19,12 @@ Configure::write('Comments.adminAccess', function (ServerRequest $request): bool
 
 This example assumes your identity exposes `get('roles')`. Use the methods supported by your own identity implementation. The same callback permits deleting another user's comment through the public delete action.
 
-The plugin inherits `AppController`, including its authentication and authorization behavior. Responses returned by the host's `beforeFilter()` or set on that event are preserved. When the request has an Authorization service, the plugin marks its explicit callback check for that request. This does not undo a denial or redirect that already occurred in the application.
+The plugin inherits `AppController`, including its authentication and authorization behavior. The host's `beforeFilter()` returns `void`; set a redirect response on the event with `$event->setResult($this->redirect('/login'))`. The plugin preserves that response. When the request has an Authorization service, the plugin marks its explicit callback check for that request. This does not undo a denial or redirect that already occurred in the application.
 
-The [Authentication component](https://github.com/cakephp/authentication/blob/3.x/src/Controller/Component/AuthenticationComponent.php) checks identity during `Controller.startup` by default, after the admin access callback. A callback denying a signed-out request can therefore produce a 403 before a later authentication redirect. Put a signed-out redirect in your host `beforeFilter()` if that is your intended behavior; the plugin preserves it there.
+An authentication check running during `Controller.startup` occurs after the admin
+access callback. A callback denying a signed-out request can therefore produce a
+403 before a later authentication redirect. Set a signed-out redirect response
+on the event in your host `beforeFilter()` if that is your intended behavior.
 
 False results, unset callbacks, and unexpected callback failures deny access. Explicit HTTP exceptions raised by the callback retain their status. Unexpected failures are logged without their exception message.
 
@@ -33,7 +36,7 @@ The plugin registers its routes when loaded normally. You do not need to add a s
 use Cake\Routing\RouteBuilder;
 
 $routes->prefix('Admin', function (RouteBuilder $routes): void {
-    $routes->plugin('Comments', ['path' => '/comments'], function (RouteBuilder $routes): void {
+    $routes->plugin('Comments', function (RouteBuilder $routes): void {
         $routes->connect('/', ['controller' => 'Comments', 'action' => 'index']);
         $routes->fallbacks();
     });

@@ -236,9 +236,9 @@ class CommentsControllerTest extends TestCase {
 			});
 		}
 		$manager = $controller->getEventManager();
-		$manager->on('Controller.initialize', ['priority' => 100], static function (): never {
+		$manager->on('Controller.initialize', static function (): never {
 			throw new RuntimeException('A later listener must not run');
-		});
+		}, options: ['priority' => 100]);
 		$event = new Event('Controller.initialize', $controller);
 		$manager->dispatch($event);
 

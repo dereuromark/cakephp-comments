@@ -15,7 +15,7 @@ class CommentTest extends TestCase {
 	/**
 	 * Public-form fields are mass-assignable; everything else (id,
 	 * identity, relational, moderation flags) must be set explicitly via
-	 * `set()` / `patchEntity(..., accessibleFields: ...)`.
+	 * `set()` / `patchEntity(..., patchableFields: ...)`.
 	 *
 	 * @return void
 	 */
@@ -51,7 +51,7 @@ class CommentTest extends TestCase {
 
 	/**
 	 * Server-trusted code can still set the protected columns explicitly
-	 * via `set()` or via an `accessibleFields` override on patchEntity.
+	 * via `set()` or via an `patchableFields` override on patchEntity.
 	 *
 	 * @return void
 	 */
@@ -206,18 +206,18 @@ class CommentTest extends TestCase {
 	public function testAccessible(): void {
 		$comment = new Comment();
 
-		$this->assertFalse($comment->isAccessible('id'));
-		$this->assertTrue($comment->isAccessible('content'));
-		$this->assertTrue($comment->isAccessible('title'));
-		$this->assertTrue($comment->isAccessible('name'));
-		$this->assertTrue($comment->isAccessible('email'));
+		$this->assertFalse($comment->isPatchable('id'));
+		$this->assertTrue($comment->isPatchable('content'));
+		$this->assertTrue($comment->isPatchable('title'));
+		$this->assertTrue($comment->isPatchable('name'));
+		$this->assertTrue($comment->isPatchable('email'));
 
-		$this->assertFalse($comment->isAccessible('model'), 'Identity columns must not be mass-assignable.');
-		$this->assertFalse($comment->isAccessible('foreign_key'));
-		$this->assertFalse($comment->isAccessible('user_id'));
-		$this->assertFalse($comment->isAccessible('parent_id'));
-		$this->assertFalse($comment->isAccessible('is_private'));
-		$this->assertFalse($comment->isAccessible('is_spam'));
+		$this->assertFalse($comment->isPatchable('model'), 'Identity columns must not be mass-assignable.');
+		$this->assertFalse($comment->isPatchable('foreign_key'));
+		$this->assertFalse($comment->isPatchable('user_id'));
+		$this->assertFalse($comment->isPatchable('parent_id'));
+		$this->assertFalse($comment->isPatchable('is_private'));
+		$this->assertFalse($comment->isPatchable('is_spam'));
 	}
 
 }
