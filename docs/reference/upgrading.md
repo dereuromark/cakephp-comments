@@ -20,3 +20,11 @@ These changes belong to the development branch until a release includes them:
 If your component previously allowed anonymous submissions while `allowAnonymous` was false, enable it deliberately or require a signed-in user. Review any overridden callback that returns comments without scoping them.
 
 The new documentation separates supported behavior from historical placeholder configuration. Existing private/spam columns are storage flags, not an automatic public visibility or approval policy.
+
+## Stored model identifiers
+
+The default remains the parent table alias. To retain a historical plugin-qualified key, attach the behavior with `['model' => 'Blog.Articles']`. Reads, component/public-controller writes and parent validation use that exact identifier. Locator aliases and shared physical tables do not imply shared comment ownership.
+
+Existing mixed keys require an explicit data migration to one chosen identifier; no automatic alias fallback runs. Trusted direct calls to `commentAdd()` still supply their own `model` option. Its historical default remains null rather than the behavior setting.
+
+The component resolves its protected `$modelAlias` property from the behavior during startup. Existing subclasses can still change that property afterward. Configure the behavior `model` to keep association reads and component submissions consistent.

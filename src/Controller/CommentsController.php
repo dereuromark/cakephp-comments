@@ -8,6 +8,7 @@ use Cake\Core\Configure;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
 use Closure;
+use Comments\Utility\ModelIdentifier;
 
 /**
  * @property \Comments\Model\Table\CommentsTable $Comments
@@ -49,7 +50,7 @@ class CommentsController extends AppController {
 		$table = $this->fetchTable($model);
 		$entity = $table->get($id);
 
-		$data['model'] = $table->getAlias();
+		$data['model'] = ModelIdentifier::resolve($table);
 		$data['foreign_key'] = $entity->get('id');
 		$data['user_id'] = $userId;
 		$data['content'] = $data['comment'] ?? $data['content'] ?? null;

@@ -48,7 +48,7 @@ In the view template:
 
 Only POST, PUT, and PATCH requests can create a comment. Successful submissions redirect to the current route, including its passed arguments. The component accepts `comment` or `content` as the form field. A failed save leaves the page available and sets an error flash message; render flash messages in your layout. It enforces `allowAnonymous` and takes the target ID from the entity by default. Keep `useEntity` enabled; disabling it lets the component use the submitted `id`, so your application must validate access to that record.
 
-`commentsData` contains paginated comments restricted to the current table alias and record ID. Only flat display is implemented by the component. Its default query does not filter private or spam comments.
+`commentsData` contains paginated comments restricted to the configured stored model identifier and record ID. Only flat display is implemented by the component. Its default query does not filter private or spam comments.
 
 ## Customize callbacks
 

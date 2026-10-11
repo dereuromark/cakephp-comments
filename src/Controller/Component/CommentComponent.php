@@ -12,6 +12,7 @@ use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Routing\Router;
 use Cake\Utility\Inflector;
+use Comments\Utility\ModelIdentifier;
 use RuntimeException;
 
 /**
@@ -51,9 +52,10 @@ class CommentComponent extends Component {
 	protected $Controller;
 
 	/**
-	 * Name of 'commentable' model
+	 * Stored comment model identifier
 	 *
-	 * Customizable in beforeFilter(), or default controller's model name is used
+	 * Initialized from the behavior configuration during startup.
+	 * Custom subclasses may override it after startup.
 	 *
 	 * @var string|null Model name
 	 */
@@ -178,7 +180,6 @@ class CommentComponent extends Component {
 		}
 
 		$model = $this->Controller->fetchTable();
-		$this->modelAlias = $model->getAlias();
 
 		$parts = explode('\\', (string)$model->getEntityClass());
 		$entityName = Inflector::classify(Inflector::underscore(array_pop($parts)));
@@ -190,6 +191,8 @@ class CommentComponent extends Component {
 			];
 			$model->addBehavior('Comments.Commentable', $config);
 		}
+
+		$this->modelAlias = ModelIdentifier::resolve($model);
 
 		if (!$this->Controller->getRequest()->is(['post', 'put', 'patch'])) {
 			return;

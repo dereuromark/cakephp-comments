@@ -7,6 +7,7 @@ use Cake\Http\Exception\MethodNotAllowedException;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\Table;
+use InvalidArgumentException;
 
 class CommentableBehavior extends Behavior {
 
@@ -17,6 +18,7 @@ class CommentableBehavior extends Behavior {
 	 */
 	protected array $_defaultConfig = [
 		'modelClass' => null, // Auto-detect
+		'model' => null, // Stored identifier defaults to the table alias
 		'commentClass' => 'Comments.Comments',
 		'nameField' => 'name',
 		'emailField' => 'email', // Historical option; does not control guest access
@@ -62,11 +64,19 @@ class CommentableBehavior extends Behavior {
 			$this->setConfig('modelClass', $this->_table->getAlias());
 		}
 
+		if ($this->getConfig('model') === null) {
+			$this->setConfig('model', $this->_table->getAlias());
+		}
+
+		if (!is_string($this->getConfig('model')) || $this->getConfig('model') === '') {
+			throw new InvalidArgumentException('The comment model identifier must be a non-empty string.');
+		}
+
 		$this->_table->hasMany('Comments', [
 			'className' => $this->getConfig('commentClass'),
 			'foreignKey' => 'foreign_key',
 			'order' => 'Comments.created ASC',
-			'conditions' => ['Comments.model' => "{$this->_table->getAlias()}"],
+			'conditions' => ['Comments.model' => $this->getConfig('model')],
 			'dependent' => true,
 		]);
 

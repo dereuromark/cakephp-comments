@@ -38,6 +38,7 @@ $this->loadComponent('Comments.Comment', [
 | Setting | Default | Effect |
 | --- | --- | --- |
 | `commentClass` | `Comments.Comments` | Comments table class used for the association. |
+| `model` | Parent table alias | Exact stored identifier for reads, component/public-controller writes and replies. `null` resolves to the table alias. |
 | `modelClass` | Parent table alias | Back-association to the parent table on the Comments table. |
 | `userModelAlias` | `Users` | User association to add if absent. |
 | `userModelClass` | `Users` | Class for a newly added user association. |
@@ -45,6 +46,8 @@ $this->loadComponent('Comments.Comment', [
 | `countComments` | `false` | Attach CounterCache to the Comments table. Requires a parent counter column. |
 | `fieldCounter` | `comments_count` | Parent column used with `countComments`. The migration does not create it. |
 | `hiddenField` | Unset | Optional visibility condition in the `comments` finder. Does not affect other queries. |
+
+Set `model` on each behavior when tables need different identifiers. A global `Comments.model` supplies the same default to behavior initialization and the public controller when no behavior is attached. Use that global value only for a single comment target. For multiple tables, configure distinct identifiers on each behavior; sharing one identifier also shares comments with the same record ID and dependent deletion scope. A behavior-specific value takes precedence. Attach or configure the behavior before processing comments; changing its setting after initialization does not rebuild association conditions.
 
 The supplied Comments table already has a `Users` association and its save rule uses that association. Setting a different `userModelClass` alone does not replace it. Customize the Comments table and its associations if your application uses a different user model.
 

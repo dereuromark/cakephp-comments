@@ -49,6 +49,7 @@ class CommentsControllerTest extends TestCase {
 		Configure::delete('Comments.controllerModels');
 		Configure::delete('Comments.testHostBeforeFilter');
 		Configure::delete('Comments.userIdField');
+		Configure::delete('Comments.model');
 
 		parent::tearDown();
 	}
@@ -512,6 +513,33 @@ class CommentsControllerTest extends TestCase {
 		$this->expectException(ForbiddenException::class);
 
 		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 1], ['content' => 'Stale session']);
+	}
+
+	/**
+	 * @return void
+	 */
+	public function testAddUsesConfiguredBehaviorModelIdentifier(): void {
+		Configure::write('Comments.allowAnonymous', true);
+		Configure::write('Comments.controllerModels.Posts', 'Posts');
+		$this->fetchTable('Posts')->addBehavior('Comments.Commentable', ['model' => 'Blog.Posts']);
+		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 1], ['content' => 'Configured endpoint']);
+		$this->assertRedirect('/');
+		$comment = $this->fetchTable('Comments.Comments')->find()->where(['content' => 'Configured endpoint'])->firstOrFail();
+		$this->assertSame('Blog.Posts', $comment->model);
+	}
+
+	/**
+	 * @return void
+	 */
+	public function testAddUsesGlobalIdentifierWithoutAttachingBehavior(): void {
+		Configure::write('Comments.allowAnonymous', true);
+		Configure::write('Comments.controllerModels.Posts', 'Posts');
+		Configure::write('Comments.model', 'LegacyPosts');
+		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 1], ['content' => 'Global endpoint']);
+		$this->assertRedirect('/');
+		$comment = $this->fetchTable('Comments.Comments')->find()->where(['content' => 'Global endpoint'])->firstOrFail();
+		$this->assertSame('LegacyPosts', $comment->model);
+		$this->assertFalse($this->fetchTable('Posts')->hasBehavior('Commentable'));
 	}
 
 }
