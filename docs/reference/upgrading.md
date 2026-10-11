@@ -13,7 +13,6 @@ These changes belong to the development branch until a release includes them:
 - Public submissions and deletions fall back to the application home page when no local referer is available.
 - Request identities are read before legacy auth and session fallbacks. Integer and string representations of the same user ID compare correctly for owner deletion.
 - Parent validation includes the model, so records with the same ID in different tables cannot share a reply thread.
-- Comments saved with the current table registry identifier, such as `Blog.Articles`, remain visible alongside newer `Articles` rows. Finders, the flat widget, and reply validation accept both identifiers for that table; a different plugin-qualified identifier remains excluded. Load plugin tables with their registry key, such as `fetchTable('Blog.Articles')`, to enable that fallback. Bare aliases shared by multiple plugins remain ambiguous, as before. No data migration is required.
 - The admin preserves host redirects and responses, supports an Authorization request service, and retains explicit HTTP exceptions from its access callback.
 - Admin templates use standard CakePHP helpers. Admin editing can change moderation flags while target fields stay read-only.
 - `/admin/comments` resolves directly to the list action. Helpers clear the current prefix when building public add URLs.
@@ -21,3 +20,9 @@ These changes belong to the development branch until a release includes them:
 If your component previously allowed anonymous submissions while `allowAnonymous` was false, enable it deliberately or require a signed-in user. Review any overridden callback that returns comments without scoping them.
 
 The new documentation separates supported behavior from historical placeholder configuration. Existing private/spam columns are storage flags, not an automatic public visibility or approval policy.
+
+## Stored model identifiers
+
+The default remains the parent table alias. To retain a historical plugin-qualified key, attach the behavior with `['model' => 'Blog.Articles']`. Reads, component/public-controller writes and parent validation use that exact identifier. Locator aliases and shared physical tables do not imply shared comment ownership.
+
+Existing mixed keys require an explicit data migration to one chosen identifier; no automatic alias fallback runs. Trusted direct calls to `commentAdd()` still supply their own `model` option. Its historical default remains null rather than the behavior setting.

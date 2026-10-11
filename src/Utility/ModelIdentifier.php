@@ -2,19 +2,22 @@
 
 namespace Comments\Utility;
 
+use Cake\Core\Configure;
 use Cake\ORM\Table;
 
 final class ModelIdentifier {
 
 	/**
-	 * Include the older registry identifier only for this commented table.
-	 *
 	 * @param \Cake\ORM\Table $table Commented table
-     *
-	 * @return list<string>
+	 *
+	 * @return string
 	 */
-	public static function aliases(Table $table): array {
-		return array_values(array_unique([$table->getAlias(), $table->getRegistryAlias()]));
+	public static function resolve(Table $table): string {
+		$model = $table->hasBehavior('Commentable')
+			? $table->getBehavior('Commentable')->getConfig('model')
+			: Configure::read('Comments.model');
+
+		return $model ?? $table->getAlias();
 	}
 
 }

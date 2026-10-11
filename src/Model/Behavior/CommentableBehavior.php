@@ -7,7 +7,6 @@ use Cake\Http\Exception\MethodNotAllowedException;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\Table;
-use Comments\Utility\ModelIdentifier;
 
 class CommentableBehavior extends Behavior {
 
@@ -18,6 +17,7 @@ class CommentableBehavior extends Behavior {
 	 */
 	protected array $_defaultConfig = [
 		'modelClass' => null, // Auto-detect
+		'model' => null, // Stored identifier defaults to the table alias
 		'commentClass' => 'Comments.Comments',
 		'nameField' => 'name',
 		'emailField' => 'email', // Historical option; does not control guest access
@@ -63,11 +63,15 @@ class CommentableBehavior extends Behavior {
 			$this->setConfig('modelClass', $this->_table->getAlias());
 		}
 
+		if ($this->getConfig('model') === null) {
+			$this->setConfig('model', $this->_table->getAlias());
+		}
+
 		$this->_table->hasMany('Comments', [
 			'className' => $this->getConfig('commentClass'),
 			'foreignKey' => 'foreign_key',
 			'order' => 'Comments.created ASC',
-			'conditions' => ['Comments.model IN' => ModelIdentifier::aliases($this->_table)],
+			'conditions' => ['Comments.model' => $this->getConfig('model')],
 			'dependent' => true,
 		]);
 
@@ -117,15 +121,12 @@ class CommentableBehavior extends Behavior {
 			//$this->commentsTable()->permalink = $options['permalink'];
 		}
 
-		$modelAliases = ModelIdentifier::aliases($this->_table);
-		$parentModelConditions = in_array($options['model'], $modelAliases, true)
-			? ['Comments.model IN' => $modelAliases]
-			: ['Comments.model' => $options['model']];
 		if ($commentId && !$this->commentsTable()->find()
 					->where([
 						'Comments.id' => $commentId,
 						'Comments.foreign_key' => $options['modelId'],
-					] + $parentModelConditions)
+						'Comments.model' => $options['model'],
+					])
 					->count()) {
 			throw new MethodNotAllowedException('Invalid parent id');
 		}

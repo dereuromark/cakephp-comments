@@ -278,7 +278,7 @@ class CommentComponent extends Component {
 		$options = [
 			'userId' => $userId,
 			'modelId' => $modelId,
-			'model' => $this->modelAlias,
+			'model' => ModelIdentifier::resolve($this->Controller->fetchTable()),
 			'data' => $data,
 			//'permalink' => $permalink,
 		];
@@ -403,7 +403,7 @@ class CommentComponent extends Component {
 		$relation = $this->Controller->fetchTable()->getAssociation('Comments')->getTarget();
 
 		return $this->Controller->paginate($relation->find()->where([
-			$relation->aliasField('model') . ' IN' => ModelIdentifier::aliases($this->Controller->fetchTable()),
+			$relation->aliasField('model') => ModelIdentifier::resolve($this->Controller->fetchTable()),
 			$relation->aliasField('foreign_key') => $options['id'],
 		]));
 	}
@@ -416,7 +416,7 @@ class CommentComponent extends Component {
 	public function callbackPrepareParams() {
 		$this->commentParams = [
 			'viewComments' => $this->viewComments,
-			'modelName' => $this->modelAlias,
+			'modelName' => ModelIdentifier::resolve($this->Controller->fetchTable()),
 			'userModel' => $this->userModel,
 		] + $this->commentParams;
 	}

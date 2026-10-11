@@ -2,7 +2,7 @@
 
 ## Comment storage
 
-The plugin stores comments in `comments_comments`. Each comment has a `model` table alias and a `foreign_key` identifying the target row. `user_id` is nullable for guests, and `parent_id` can identify another comment on the same target.
+The plugin stores comments in `comments_comments`. Each comment has a stored `model` identifier and a `foreign_key` identifying the target row. `user_id` is nullable for guests, and `parent_id` can identify another comment on the same target.
 
 The default migration also creates optional `name`, `email`, and `title` columns, required `content`, boolean `is_private` and `is_spam` flags, and `created` and `modified` timestamps. It creates no database foreign keys to your application tables. ORM rules check the Users and parent-comment associations when saving.
 
@@ -16,7 +16,19 @@ In an application table's `initialize()` method:
 $this->addBehavior('Comments.Commentable');
 ```
 
-This adds a `Comments` association restricted to that table alias and its exact registry identifier. Older public submissions can contain a plugin-qualified identifier such as `Blog.Articles`. Load that table using `fetchTable('Blog.Articles')` so its registry identifier matches those rows. Loading the same class under a different locator key does not infer historical identifiers. Bare aliases shared by multiple plugins remain ambiguous; use distinct aliases when those tables share comment storage. The association orders comments by creation time. Load comments with a normal contain:
+This adds a `Comments` association restricted to the table alias by equality. That alias is also used for component and public-controller submissions. Comments are ordered by creation time.
+
+For existing comments stored under a different identifier, configure that exact value when attaching the behavior:
+
+```php
+$this->addBehavior('Comments.Commentable', ['model' => 'Blog.Articles']);
+```
+
+The association, component, public controller and reply validation then use `Blog.Articles`. The locator key or physical table name does not expand the match. Different table aliases stay separate unless you explicitly configure the same stored identifier.
+
+Choose one identifier for each comment target. If both `Articles` and `Blog.Articles` already exist, review the rows and migrate them to the chosen identifier, including parent/reply rows, before expecting one thread. The plugin does not combine mixed identifiers automatically.
+
+Load comments with a normal contain:
 
 ```php
 $post = $this->fetchTable('Posts')->get($id, contain: ['Comments']);
