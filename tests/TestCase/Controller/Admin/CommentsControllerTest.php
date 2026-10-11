@@ -286,7 +286,7 @@ class CommentsControllerTest extends TestCase {
 		$this->post(['prefix' => 'Admin', 'plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', $parent->id]);
 
 		$this->assertRedirect();
-		$this->assertFlashMessage('The comment could not be deleted. Please, try again.');
+		$this->assertFlashMessage('Delete replies before deleting this comment.');
 		$this->assertTrue($comments->exists(['id' => $parent->id]));
 		$this->assertSame($parent->id, $comments->get($reply->id)->parent_id);
 	}

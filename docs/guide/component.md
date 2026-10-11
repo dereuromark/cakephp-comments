@@ -68,7 +68,7 @@ public function callbackCommentsFetchDataFlat(array $options): \Cake\Datasource\
 }
 ```
 
-Adapt the table alias to your controller. An empty `parent_id` creates a top-level comment. A parent ID must be a positive integer or integer string and belong to the same model and record. Invalid input receives a 400 response; the separate public controller always creates top-level comments.
+Adapt the table alias to your controller. An empty `parent_id` creates a top-level comment. A parent ID must be a positive integer or integer string and belong to the same model and record. Malformed IDs receive a 400 response. A well-formed ID that does not identify a parent on the same model and record receives a 405; the separate public controller always creates top-level comments.
 
 ## AJAX
 
