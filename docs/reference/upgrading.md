@@ -27,4 +27,4 @@ The default remains the parent table alias. To retain a historical plugin-qualif
 
 Existing mixed keys require an explicit data migration to one chosen identifier; no automatic alias fallback runs. Trusted direct calls to `commentAdd()` still supply their own `model` option. Its historical default remains null rather than the behavior setting.
 
-Custom component subclasses that reassigned the protected `$modelAlias` property to change storage should configure the behavior `model` instead. That property still identifies the controller table for diagnostics.
+The component resolves its protected `$modelAlias` property from the behavior during startup. Existing subclasses can still change that property afterward. Configure the behavior `model` to keep association reads and component submissions consistent.

@@ -243,4 +243,29 @@ class LegacyModelAliasTest extends TestCase {
 		}
 	}
 
+	/**
+	 * @return void
+	 */
+	public function testComponentSubclassRetainsModelAliasOverrideAfterStartup(): void {
+		$controller = new class ((new ServerRequest(['params' => ['controller' => 'Posts', 'action' => 'view']]))->withHeader('X-Requested-With', 'XMLHttpRequest')->withMethod('POST')->withParsedBody(['content' => 'Subclass target'])) extends AppController {
+			protected ?string $defaultTable = 'Blog.Posts';
+		};
+		$component = new class (new ComponentRegistry($controller), ['allowAnonymous' => true]) extends CommentComponent {
+			/**
+			 * @return void
+			 */
+			public function selectTarget(): void {
+				$this->modelAlias = 'CustomTarget';
+			}
+		};
+		$component->startup(new Event('Controller.startup', $controller));
+		$component->selectTarget();
+		$controller->set('post', $this->posts->get(1));
+		$component->beforeRender(new Event('Controller.beforeRender', $controller));
+		$this->assertSame('CustomTarget', $this->fetchTable('Comments.Comments')->find()->where(['content' => 'Subclass target'])->firstOrFail()->model);
+		$this->assertSame(['CustomTarget'], array_column(iterator_to_array($component->callbackFetchDataFlat(['id' => 1])), 'model'));
+		$component->callbackPrepareParams();
+		$this->assertSame('CustomTarget', (new ReflectionProperty($component, 'commentParams'))->getValue($component)['modelName']);
+	}
+
 }

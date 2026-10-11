@@ -179,7 +179,6 @@ class CommentComponent extends Component {
 		}
 
 		$model = $this->Controller->fetchTable();
-		$this->modelAlias = $model->getAlias();
 
 		$parts = explode('\\', (string)$model->getEntityClass());
 		$entityName = Inflector::classify(Inflector::underscore(array_pop($parts)));
@@ -191,6 +190,8 @@ class CommentComponent extends Component {
 			];
 			$model->addBehavior('Comments.Commentable', $config);
 		}
+
+		$this->modelAlias = ModelIdentifier::resolve($model);
 
 		if (!$this->Controller->getRequest()->is(['post', 'put', 'patch'])) {
 			return;
@@ -278,7 +279,7 @@ class CommentComponent extends Component {
 		$options = [
 			'userId' => $userId,
 			'modelId' => $modelId,
-			'model' => ModelIdentifier::resolve($this->Controller->fetchTable()),
+			'model' => $this->modelAlias,
 			'data' => $data,
 			//'permalink' => $permalink,
 		];
@@ -403,7 +404,7 @@ class CommentComponent extends Component {
 		$relation = $this->Controller->fetchTable()->getAssociation('Comments')->getTarget();
 
 		return $this->Controller->paginate($relation->find()->where([
-			$relation->aliasField('model') => ModelIdentifier::resolve($this->Controller->fetchTable()),
+			$relation->aliasField('model') => $this->modelAlias,
 			$relation->aliasField('foreign_key') => $options['id'],
 		]));
 	}
@@ -416,7 +417,7 @@ class CommentComponent extends Component {
 	public function callbackPrepareParams() {
 		$this->commentParams = [
 			'viewComments' => $this->viewComments,
-			'modelName' => ModelIdentifier::resolve($this->Controller->fetchTable()),
+			'modelName' => $this->modelAlias,
 			'userModel' => $this->userModel,
 		] + $this->commentParams;
 	}
