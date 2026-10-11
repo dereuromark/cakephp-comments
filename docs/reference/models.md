@@ -65,6 +65,8 @@ This only affects fresh installations. Changing an existing column requires an a
 
 ## Replies and counters
 
-The behavior's `commentAdd($parentId, $options)` validates a parent against the target model and record ID. The component accepts `parent_id`; the separate public controller always creates a top-level comment. The component displays a flat list. You can build a threaded presentation yourself from the parent relation.
+The behavior's `commentAdd($parentId, $options)` validates a parent against the target model and record ID. The component accepts `parent_id`; the separate public controller always creates a top-level comment. The component displays a flat list. You can build a threaded presentation yourself from the parent relation. The plugin does not attach Tree or require nested-set columns on Comments when your application table has its own `parent_id` column.
+
+ORM deletion rejects a comment while it still has replies. Remove replies first, then the parent. This rule applies to the public and admin controllers; bulk database deletes bypass ORM rules.
 
 `countComments` attaches CounterCache and requires a `comments_count` column on your application table. Add that column with an application migration before enabling it. For multiple commentable table types, review and scope the counter associations to your application's schema.

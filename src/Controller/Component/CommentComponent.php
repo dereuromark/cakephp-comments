@@ -8,6 +8,7 @@ use Cake\Controller\Component;
 use Cake\Core\Configure;
 use Cake\Datasource\Paging\PaginatedInterface;
 use Cake\Event\EventInterface;
+use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Routing\Router;
 use Cake\Utility\Inflector;
@@ -283,6 +284,17 @@ class CommentComponent extends Component {
 
 		// Parent comment id
 		$commentId = $data['parent_id'] ?? null;
+		if ($commentId === '') {
+			$commentId = null;
+		} elseif ($commentId !== null) {
+			if (!is_int($commentId) && !is_string($commentId)) {
+				throw new BadRequestException(__d('comments', 'Invalid parent id.'));
+			}
+			$commentId = filter_var($commentId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+			if ($commentId === false) {
+				throw new BadRequestException(__d('comments', 'Invalid parent id.'));
+			}
+		}
 		/** @var \Cake\ORM\Table $table */
 		$table = $this->Controller->fetchTable();
 		/** @var \Comments\Model\Behavior\CommentableBehavior $behavior */
@@ -291,6 +303,8 @@ class CommentComponent extends Component {
 		if ($result) {
 			return $this->prgRedirect();
 		}
+
+		$this->Flash->error(__d('comments', 'Could not save comment, please try again.'));
 
 		return $result;
 	}

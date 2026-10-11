@@ -172,6 +172,7 @@ class CommentsControllerTest extends TestCase {
 		$this->post(['prefix' => 'Admin', 'plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'edit', $comment->id], [
 			'is_private' => false,
 			'is_spam' => false,
+			'email' => '',
 			'model' => 'Forged',
 			'foreign_key' => 999,
 		]);

@@ -192,6 +192,7 @@ class CommentsTableTest extends TestCase {
 	 */
 	public function testValidationEmptyEmailAllowed(): void {
 		$data = [
+			'email' => '',
 			'foreign_key' => 1,
 			'model' => 'Posts',
 			'content' => 'Test',
@@ -332,6 +333,17 @@ class CommentsTableTest extends TestCase {
 			->first();
 
 		$this->assertNotNull($result);
+	}
+
+	public function testRepliesMustBeDeletedBeforeTheirParent(): void {
+		$parent = $this->Comments->add(['model' => 'Posts', 'foreign_key' => 1, 'content' => 'Parent']);
+		$reply = $this->Comments->add(['model' => 'Posts', 'foreign_key' => 1, 'parent_id' => $parent->id, 'content' => 'Reply']);
+
+		$this->assertFalse($this->Comments->delete($parent));
+		$this->assertTrue($this->Comments->exists(['id' => $parent->id]));
+		$this->assertTrue($this->Comments->delete($reply));
+		$this->assertTrue($this->Comments->delete($this->Comments->get($parent->id)));
+		$this->assertFalse($this->Comments->exists(['id' => $parent->id]));
 	}
 
 }

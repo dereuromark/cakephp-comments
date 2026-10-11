@@ -493,4 +493,16 @@ class CommentableBehaviorTest extends TestCase {
 		]);
 	}
 
+	public function testHostParentColumnDoesNotRequireTreeColumnsOnComments(): void {
+		$table = $this->getTableLocator()->get('HierarchicalPosts', ['className' => Table::class, 'table' => 'posts']);
+		$table->getSchema()->addColumn('parent_id', ['type' => 'integer', 'null' => true]);
+		$table->addBehavior('Comments.Commentable');
+		$behavior = $table->getBehavior('Commentable');
+
+		$id = $behavior->commentAdd(null, ['model' => 'Posts', 'modelId' => 1, 'data' => ['content' => 'Hierarchical post']]);
+
+		$this->assertNotNull($id);
+		$this->assertFalse($this->fetchTable('Comments.Comments')->hasBehavior('Tree'));
+	}
+
 }

@@ -9,7 +9,7 @@ Add `Comments` settings to the array returned by `config/app.php`, or write them
 | `controllerModels` | Empty | Allowed URL aliases mapped to table class names. |
 | `allowAnonymous` | `false` | Permit comment creation without a user ID. |
 | `userIdField` | `id` | Field read from an array-like identity, auth component, or session. |
-| `sessionKey` | `Auth.User` | Session fallback path before the user ID field. |
+| `sessionKey` | `Auth.User` | Session path used only without a loaded auth component, before the user ID field. |
 | `adminAccess` | Unset | Closure receiving the request; literal `true` grants admin and elevated delete access. |
 
 ## Component

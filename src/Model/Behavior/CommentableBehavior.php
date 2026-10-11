@@ -83,10 +83,6 @@ class CommentableBehavior extends Behavior {
 			]);
 		}
 
-		if ($this->_table->getSchema()->getColumn('parent_id') && !$this->commentsTable()->hasBehavior('Tree')) {
-			$this->commentsTable()->addBehavior('Tree');
-		}
-
 		if ($this->commentsTable()->hasAssociation($this->getConfig('userModelAlias'))) {
 			return;
 		}
@@ -177,12 +173,6 @@ class CommentableBehavior extends Behavior {
 					],
 				],
 			);
-
-			if ($this->commentsTable()->behaviors()->has('Tree')) {
-				$this->commentsTable()->behaviors()->load('Tree', [
-					'scope' => ['Comments.foreign_key' => $data['foreign_key']],
-				]);
-			}
 
 			if ($this->commentsTable()->save($comment)) {
 				return $comment->id;

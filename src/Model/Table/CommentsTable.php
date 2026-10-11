@@ -70,6 +70,7 @@ class CommentsTable extends Table {
 		$validator->requirePresence('model', 'create');
 		$validator->notEmptyString('foreign_key');
 		$validator->requirePresence('foreign_key', 'create');
+		$validator->allowEmptyString('email');
 		$validator->email('email', false, __d('comments', 'Please enter a valid email address'));
 
 		return $validator;
@@ -86,6 +87,11 @@ class CommentsTable extends Table {
 	public function buildRules(RulesChecker $rules): RulesChecker {
 		$rules->add($rules->existsIn(['parent_id'], 'ParentComments'));
 		$rules->add($rules->existsIn(['user_id'], 'Users'));
+		$rules->addDelete($rules->isNotLinkedTo(
+			'ChildComments',
+			'child_comments',
+			__d('comments', 'Delete replies before deleting this comment.'),
+		));
 
 		return $rules;
 	}
