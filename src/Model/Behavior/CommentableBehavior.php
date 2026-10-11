@@ -117,14 +117,15 @@ class CommentableBehavior extends Behavior {
 			//$this->commentsTable()->permalink = $options['permalink'];
 		}
 
+		$modelAliases = ModelIdentifier::aliases($this->_table);
+		$parentModelConditions = in_array($options['model'], $modelAliases, true)
+			? ['Comments.model IN' => $modelAliases]
+			: ['Comments.model' => $options['model']];
 		if ($commentId && !$this->commentsTable()->find()
 					->where([
 						'Comments.id' => $commentId,
 						'Comments.foreign_key' => $options['modelId'],
-						'Comments.model IN' => in_array($options['model'], ModelIdentifier::aliases($this->_table), true)
-							? ModelIdentifier::aliases($this->_table)
-							: [$options['model']],
-					])
+					] + $parentModelConditions)
 					->count()) {
 			throw new MethodNotAllowedException('Invalid parent id');
 		}

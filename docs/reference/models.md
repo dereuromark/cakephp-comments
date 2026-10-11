@@ -16,7 +16,7 @@ In an application table's `initialize()` method:
 $this->addBehavior('Comments.Commentable');
 ```
 
-This adds a `Comments` association restricted to that table alias. The association orders comments by creation time. Load comments with a normal contain:
+This adds a `Comments` association restricted to that table alias and its exact registry identifier. Older public submissions can contain a plugin-qualified identifier such as `Blog.Articles`. Load that table using `fetchTable('Blog.Articles')` so its registry identifier matches those rows. Loading the same class under a different locator key does not infer historical identifiers. Bare aliases shared by multiple plugins remain ambiguous; use distinct aliases when those tables share comment storage. The association orders comments by creation time. Load comments with a normal contain:
 
 ```php
 $post = $this->fetchTable('Posts')->get($id, contain: ['Comments']);

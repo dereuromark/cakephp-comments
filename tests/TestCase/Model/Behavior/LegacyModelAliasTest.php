@@ -110,4 +110,17 @@ class LegacyModelAliasTest extends TestCase {
 		$this->posts->getBehavior('Commentable')->commentAdd($parent->get('id'), ['model' => 'Posts', 'modelId' => 1, 'data' => ['content' => 'Blocked reply']]);
 	}
 
+	/**
+	 * @return void
+	 */
+	public function testTrustedDirectCallerRetainsItsExplicitModelIdentifier(): void {
+		$parent = $this->fetchTable('Comments.Comments')->add(['model' => 'CustomTarget', 'foreign_key' => 1, 'content' => 'Custom target parent']);
+		$id = $this->posts->getBehavior('Commentable')->commentAdd($parent->get('id'), ['model' => 'CustomTarget', 'modelId' => 1, 'data' => ['content' => 'Custom target reply']]);
+
+		$this->assertNotNull($id);
+		$reply = $this->fetchTable('Comments.Comments')->get($id);
+		$this->assertSame('CustomTarget', $reply->get('model'));
+		$this->assertSame($parent->get('id'), $reply->get('parent_id'));
+	}
+
 }
