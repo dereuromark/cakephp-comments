@@ -30,8 +30,8 @@ bin/cake migrations migrate -p Comments
 
 This creates `comments_comments`. The default connection must point to the same database used by your application. For another connection, add `-c connection_name` to the migration command and configure the Comments table to use that connection.
 
-The examples use an existing `Posts` table and an existing `Users` table with integer user IDs. Comments can belong to other application models, but the plugin does not create your application tables or authentication system. Read [Models and migrations](../reference/models) before migrating if the records receiving comments use UUIDs.
+The examples use an existing `Posts` table and an existing `Users` table with integer user IDs. Comments can belong to other application models, but the plugin does not create your application tables or authentication system. Read [Models and migrations](../reference/models.md) before migrating if the records receiving comments use UUIDs.
 
 ## Continue
 
-Follow [Getting started](./getting-started) to display and submit comments on a post. Admin access is disabled until you configure its [access callback](../reference/admin).
+Follow [Getting started](./getting-started.md) to display and submit comments on a post. Admin access is disabled until you configure its [access callback](../reference/admin.md).

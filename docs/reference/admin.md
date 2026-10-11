@@ -47,6 +47,6 @@ This example defines the admin routes only. The public helper also needs the pub
 
 ## Editing
 
-Admins can change comment text, guest details, and private/spam flags. The target model and record ID remain read-only. The flags do not automatically filter public queries; see [Visibility](./models#visibility).
+Admins can change comment text, guest details, and private/spam flags. The target model and record ID remain read-only. The flags do not automatically filter public queries; see [Visibility](./models.md#visibility).
 
 Delete actions require POST or DELETE. Comments with replies are retained until their replies have been deleted. Keep your application's CSRF and form protection enabled. The templates use your layout and optional CSS classes; supply application styling as needed.

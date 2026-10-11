@@ -1,6 +1,6 @@
 # Getting started
 
-Complete [Installation](./installation) first. This example adds a comment form to an existing post page using the plugin's separate controller. Your application already needs `Posts`, `Users`, and a `PostsController::view()` action.
+Complete [Installation](./installation.md) first. This example adds a comment form to an existing post page using the plugin's separate controller. Your application already needs `Posts`, `Users`, and a `PostsController::view()` action.
 
 ## Allow comments on posts
 
@@ -16,7 +16,7 @@ Add this configuration to the array returned by `config/app.php`:
 
 The key is the public URL alias. The value is the table class name to load. Only configured aliases can receive comments through the plugin controller.
 
-Anonymous comments are disabled by default. A signed-in request must have an identity whose identifier matches a record in `Users`. See [Access and identity](./access) if your application needs guest comments or uses a legacy session login.
+Anonymous comments are disabled by default. A signed-in request must have an identity whose identifier matches a record in `Users`. See [Access and identity](./access.md) if your application needs guest comments or uses a legacy session login.
 
 ## Load the helper
 
@@ -66,6 +66,6 @@ Open an existing post while signed in, submit a nonempty comment, and reload the
 
 An empty comment is rejected with an error flash message. A signed-out submission receives a 403 unless anonymous comments are enabled. Escape comment content when rendering it, as the template above does.
 
-The plugin stores `is_private` and `is_spam` flags, but these flags do not automatically hide comments in this basic query. Add your visibility policy to the query before using moderation flags in production. See [Models and migrations](../reference/models#visibility).
+The plugin stores `is_private` and `is_spam` flags, but these flags do not automatically hide comments in this basic query. Add your visibility policy to the query before using moderation flags in production. See [Models and migrations](../reference/models.md#visibility).
 
-If you prefer posting to the same application action, use the [Comment component](./component) instead.
+If you prefer posting to the same application action, use the [Comment component](./component.md) instead.

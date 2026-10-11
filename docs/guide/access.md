@@ -45,4 +45,4 @@ The separate public add action ignores submitted identity, target, and parent co
 
 ## Admin access
 
-See [Admin](../reference/admin) for the required callback. The plugin inherits the application's controller behavior. It has no standalone mode that bypasses authentication or authorization.
+See [Admin](../reference/admin.md) for the required callback. The plugin inherits the application's controller behavior. It has no standalone mode that bypasses authentication or authorization.

@@ -1,6 +1,6 @@
 # Configuration
 
-Add `Comments` settings to the array returned by `config/app.php`, or write them through `Cake\Core\Configure`. The example file at [config/app.example.php](https://github.com/dereuromark/cakephp-comments/blob/master/config/app.example.php) is a starting point; the plugin does not load it automatically.
+Add `Comments` settings to the array returned by `config/app.php`, or write them through `Cake\Core\Configure`. The example file at [config/app.example.php](https://github.com/dereuromark/cakephp-comments/blob/cake6/config/app.example.php) is a starting point; the plugin does not load it automatically.
 
 ## Public controller and access
 

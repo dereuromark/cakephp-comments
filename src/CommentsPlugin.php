@@ -86,7 +86,7 @@ class CommentsPlugin extends BasePlugin {
 	/**
 	 * Register application container services.
 	 *
-	 * @link https://book.cakephp.org/5/en/development/dependency-injection.html#dependency-injection
+	 * @link https://book.cakephp.org/6/en/development/dependency-injection.html#dependency-injection
 	 *
 	 * @param \Cake\Container\ContainerInterface $container The Container to update.
 	 *
