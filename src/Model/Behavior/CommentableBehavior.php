@@ -126,6 +126,10 @@ class CommentableBehavior extends Behavior {
 			//$this->commentsTable()->permalink = $options['permalink'];
 		}
 
+		if ($commentId && $options['model'] === null) {
+			return null;
+		}
+
 		if ($commentId && !$this->commentsTable()->find()
 					->where([
 						'Comments.id' => $commentId,
