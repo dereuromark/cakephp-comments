@@ -19,9 +19,9 @@ class CommentableBehavior extends Behavior {
 		'modelClass' => null, // Auto-detect
 		'commentClass' => 'Comments.Comments',
 		'nameField' => 'name',
-		'emailField' => 'email', // Set to false to only use logged-in commenting
+		'emailField' => 'email', // Historical option; does not control guest access
 		'userModelAlias' => 'Users',
-		'userModelClass' => 'Users', // Set to false to only use guest commenting
+		'userModelClass' => 'Users',
 		'userModel' => null,
 		'countComments' => false,
 		'implementedFinders' => [
@@ -124,6 +124,7 @@ class CommentableBehavior extends Behavior {
 					->where([
 						'Comments.id' => $commentId,
 						'Comments.foreign_key' => $options['modelId'],
+						'Comments.model' => $options['model'],
 					])
 					->count()) {
 			throw new MethodNotAllowedException('Invalid parent id');

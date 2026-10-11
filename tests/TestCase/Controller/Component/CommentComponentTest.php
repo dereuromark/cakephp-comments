@@ -6,7 +6,10 @@ namespace Comments\Test\TestCase\Controller\Component;
 use Cake\Controller\ComponentRegistry;
 use Cake\Core\Configure;
 use Cake\Event\Event;
+use Cake\Http\Exception\ForbiddenException;
+use Cake\Http\Response;
 use Cake\Http\ServerRequest;
+use Cake\ORM\Entity;
 use Cake\Routing\RouteBuilder;
 use Cake\Routing\Router;
 use Cake\TestSuite\TestCase;
@@ -138,6 +141,41 @@ class CommentComponentTest extends TestCase {
 		$this->assertFalse($this->Component->getConfig('allowAnonymous'));
 		$this->assertTrue($this->Component->getConfig('useEntity'));
 		$this->assertNull($this->Component->getConfig('viewVariable'));
+	}
+
+	public function testFlatCommentsAreScopedToViewedRecord(): void {
+		$table = $this->fetchTable('Comments.Comments');
+		$table->add(['model' => 'Posts', 'foreign_key' => 2, 'content' => 'Other post']);
+		$table->add(['model' => 'Articles', 'foreign_key' => 1, 'content' => 'Other model']);
+		$this->Component->startup(new Event('Controller.startup', $this->Controller));
+		$comments = $this->Component->callbackFetchDataFlat(['id' => 1]);
+
+		$this->assertCount(1, $comments);
+		foreach ($comments as $comment) {
+			$this->assertSame('Posts', $comment->model);
+			$this->assertSame(1, $comment->foreign_key);
+		}
+	}
+
+	public function testAnonymousCommentIsDeniedByDefault(): void {
+		$this->Controller->setRequest($this->Controller->getRequest()->withMethod('POST')->withParsedBody(['comment' => 'Anonymous example']));
+		$this->Component->startup(new Event('Controller.startup', $this->Controller));
+		$this->Controller->set('post', $this->fetchTable('Posts')->get(1));
+
+		$this->expectException(ForbiddenException::class);
+		$this->Component->beforeRender(new Event('Controller.beforeRender', $this->Controller));
+	}
+
+	public function testAnonymousCommentCanBeEnabled(): void {
+		$this->Controller->setRequest($this->Controller->getRequest()->withMethod('POST')->withParsedBody(['content' => 'Anonymous example']));
+		$this->Component->setConfig('allowAnonymous', true);
+		$this->Component->startup(new Event('Controller.startup', $this->Controller));
+		$this->Controller->set('post', $this->fetchTable('Posts')->get(1));
+		$this->Component->beforeRender(new Event('Controller.beforeRender', $this->Controller));
+
+		$comment = $this->fetchTable('Comments.Comments')->find()->where(['content' => 'Anonymous example'])->firstOrFail();
+		$this->assertNull($comment->user_id);
+		$this->assertSame('Posts', $comment->model);
 	}
 
 	/**
@@ -304,6 +342,25 @@ class CommentComponentTest extends TestCase {
 		$this->Component->beforeRender($event);
 
 		$this->assertNull($event->getResult());
+	}
+
+	public function testContentZeroWithCustomViewVariableAndIdentity(): void {
+		$this->Component->setConfig('viewVariable', 'article');
+		$request = $this->Controller->getRequest()->withMethod('POST')
+			->withParsedBody(['content' => '0'])
+			->withAttribute('identity', new Entity(['id' => 1]));
+		$this->Controller->setRequest($request);
+		$this->Controller->set('article', $this->fetchTable('Posts')->get(1));
+		$this->Component->startup(new Event('Controller.startup', $this->Controller));
+		$event = new Event('Controller.beforeRender', $this->Controller);
+
+		$this->Component->beforeRender($event);
+
+		$comment = $this->fetchTable('Comments.Comments')->find()->where(['content' => '0'])->firstOrFail();
+		$this->assertSame(1, $comment->user_id);
+		$this->assertSame(1, $comment->foreign_key);
+		$this->assertInstanceOf(Response::class, $event->getResult());
+		$this->assertSame('/Posts/view/1', $event->getResult()->getHeaderLine('Location'));
 	}
 
 }

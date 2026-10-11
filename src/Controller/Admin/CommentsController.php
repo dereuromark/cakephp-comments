@@ -7,6 +7,8 @@ use App\Controller\AppController;
 use Cake\Core\Configure;
 use Cake\Event\EventInterface;
 use Cake\Http\Exception\ForbiddenException;
+use Cake\Http\Exception\HttpException;
+use Cake\Http\Response;
 use Cake\Log\Log;
 use Closure;
 use Throwable;
@@ -40,12 +42,14 @@ class CommentsController extends AppController {
 	 * @return void
 	 */
 	public function beforeFilter(EventInterface $event): void {
-		parent::beforeFilter($event);
+		$parentResult = parent::beforeFilter($event);
+		$this->skipAdminAuthorizationCheck();
+		$response = $parentResult instanceof Response ? $parentResult : $event->getResult();
+		if ($response instanceof Response) {
+			$event->setResult($response);
+			$event->stopPropagation();
 
-		// Coexist with cakephp/authorization: the gate IS the authorization decision
-		// for these controllers, so silence the policy check.
-		if ($this->components()->has('Authorization') && method_exists($this->components()->get('Authorization'), 'skipAuthorization')) {
-			$this->components()->get('Authorization')->skipAuthorization();
+			return;
 		}
 
 		$gate = Configure::read('Comments.adminAccess');
@@ -58,14 +62,34 @@ class CommentsController extends AppController {
 
 		try {
 			$allowed = $gate($this->request) === true;
+		} catch (HttpException $e) {
+			throw $e;
 		} catch (Throwable $e) {
-			Log::warning(sprintf('Comments.adminAccess threw %s: %s', $e::class, $e->getMessage()));
+			Log::warning(sprintf('Comments.adminAccess callback failed (%s at %s:%d).', $e::class, $e->getFile(), $e->getLine()));
 
 			throw new ForbiddenException(__d('comments', 'Comments admin access denied.'));
 		}
 
 		if (!$allowed) {
 			throw new ForbiddenException(__d('comments', 'Comments admin access denied.'));
+		}
+	}
+
+	protected function skipAdminAuthorizationCheck(): void {
+		$authorization = $this->request->getAttribute('authorization');
+		if (!is_object($authorization)) {
+			return;
+		}
+		if ($this->components()->has('Authorization')) {
+			$component = $this->components()->get('Authorization');
+			if (method_exists($component, 'skipAuthorization')) {
+				$component->skipAuthorization();
+
+				return;
+			}
+		}
+		if (method_exists($authorization, 'skipAuthorization')) {
+			$authorization->skipAuthorization();
 		}
 	}
 
@@ -98,7 +122,9 @@ class CommentsController extends AppController {
 	public function edit($id = null) {
 		$comment = $this->Comments->get($id, contain: []);
 		if ($this->request->is(['patch', 'post', 'put'])) {
-			$comment = $this->Comments->patchEntity($comment, $this->request->getData());
+			$comment = $this->Comments->patchEntity($comment, $this->request->getData(), [
+				'accessibleFields' => ['is_private' => true, 'is_spam' => true],
+			]);
 			if ($this->Comments->save($comment)) {
 				$this->Flash->success(__d('comments', 'The comment has been saved.'));
 

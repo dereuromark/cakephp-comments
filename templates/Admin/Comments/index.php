@@ -37,23 +37,22 @@ $cspNonce = (string)$this->getRequest()->getAttribute('cspNonce', '');
                 <?php foreach ($comments as $comment): ?>
                 <tr>
                     <td><?= h($comment->model) ?></td>
-                    <td><?= $this->Number->format($comment->foreign_key) ?></td>
-                    <td><?= $comment->hasValue('user') ? $this->Html->link($comment->user->username, ['controller' => 'Users', 'action' => 'view', $comment->user->id]) : '' ?></td>
-                    <td><?= h($comment->name) ?></td>
+                    <td><?= h($comment->foreign_key) ?></td>
+                    <td><?= $comment->hasValue('user') ? h($comment->user_id) : '' ?></td>
                     <td>
                         <?= h($comment->email) ?>
                         <?php if ($comment->name) { ?>
                             (<?= h($comment->name) ?>)
                         <?php } ?>
                     </td>
-                    <td><?= $this->IconSnippet->yesNo($comment->is_private) ?></td>
-                    <td><?= $this->IconSnippet->yesNo($comment->is_spam) ?></td>
+                    <td><?= $comment->is_private ? __d('comments', 'Yes') : __d('comments', 'No') ?></td>
+                    <td><?= $comment->is_spam ? __d('comments', 'Yes') : __d('comments', 'No') ?></td>
                     <td><?= $this->Time->nice($comment->created) ?></td>
                     <td><?= $this->Time->nice($comment->modified) ?></td>
                     <td class="actions">
-                        <?php echo $this->Html->link($this->Icon->render('view'), ['action' => 'view', $comment->id], ['escapeTitle' => false]); ?>
-                        <?php echo $this->Html->link($this->Icon->render('edit'), ['action' => 'edit', $comment->id], ['escapeTitle' => false]); ?>
-                        <?php echo $this->Form->postButton($this->Icon->render('delete'), ['action' => 'delete', $comment->id], [
+                        <?php echo $this->Html->link(__d('comments', 'View'), ['action' => 'view', $comment->id], ['escapeTitle' => false]); ?>
+                        <?php echo $this->Html->link(__d('comments', 'Edit'), ['action' => 'edit', $comment->id], ['escapeTitle' => false]); ?>
+                        <?php echo $this->Form->postButton(__d('comments', 'Delete'), ['action' => 'delete', $comment->id], [
                             'escapeTitle' => false,
                             'class' => 'btn btn-link p-0 align-baseline',
                             'form' => [
@@ -68,7 +67,11 @@ $cspNonce = (string)$this->getRequest()->getAttribute('cspNonce', '');
         </table>
     </div>
 
-    <?php echo $this->element('Tools.pagination'); ?>
+    <nav aria-label="<?= __d('comments', 'Pagination') ?>">
+        <?= $this->Paginator->prev(__d('comments', 'Previous')) ?>
+        <?= $this->Paginator->numbers() ?>
+        <?= $this->Paginator->next(__d('comments', 'Next')) ?>
+    </nav>
 </div>
 <script<?= $cspNonce !== '' ? ' nonce="' . h($cspNonce) . '"' : '' ?>>
 document.querySelectorAll('form[data-confirm-message]').forEach(function(form) {

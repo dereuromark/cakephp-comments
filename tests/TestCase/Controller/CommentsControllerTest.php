@@ -8,15 +8,20 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\MethodNotAllowedException;
 use Cake\Http\Exception\NotFoundException;
+use Cake\ORM\Entity;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
+use Comments\Controller\CommentsController;
 use Comments\Model\Entity\Comment;
+use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesMethod;
 
 /**
  * Comments\Controller\CommentsController Test Case
- *
- * @uses \Comments\Controller\CommentsController
  */
+#[UsesClass(CommentsController::class)]
+#[UsesMethod(CommentsController::class, 'add')]
+#[UsesMethod(CommentsController::class, 'delete')]
 class CommentsControllerTest extends TestCase {
 
 	use IntegrationTestTrait;
@@ -41,6 +46,8 @@ class CommentsControllerTest extends TestCase {
 		Configure::delete('Comments.allowAnonymous');
 		Configure::delete('Comments.adminAccess');
 		Configure::delete('Comments.controllerModels');
+		Configure::delete('Comments.testHostBeforeFilter');
+		Configure::delete('Comments.userIdField');
 
 		parent::tearDown();
 	}
@@ -64,8 +71,6 @@ class CommentsControllerTest extends TestCase {
 	/**
 	 * Test add method with 'comment' field name
 	 *
-	 * @uses \Comments\Controller\CommentsController::add()
-     *
 	 * @return void
 	 */
 	public function testAdd(): void {
@@ -81,7 +86,7 @@ class CommentsControllerTest extends TestCase {
 
 		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 1], $data);
 
-		$this->assertRedirect(['action' => 'index']);
+		$this->assertRedirect('/');
 		$this->assertFlashMessage('The comment has been saved.');
 
 		Configure::delete('Comments.controllerModels');
@@ -90,8 +95,6 @@ class CommentsControllerTest extends TestCase {
 	/**
 	 * Test add method with 'content' field name (alternative)
 	 *
-	 * @uses \Comments\Controller\CommentsController::add()
-     *
 	 * @return void
 	 */
 	public function testAddWithContentField(): void {
@@ -106,7 +109,7 @@ class CommentsControllerTest extends TestCase {
 
 		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 1], $data);
 
-		$this->assertRedirect(['action' => 'index']);
+		$this->assertRedirect('/');
 
 		$comment = $this->fetchTable('Comments.Comments')->find()
 			->where(['content' => 'This is a test comment using content field'])
@@ -119,8 +122,6 @@ class CommentsControllerTest extends TestCase {
 	/**
 	 * Test add method with invalid alias throws NotFoundException
 	 *
-	 * @uses \Comments\Controller\CommentsController::add()
-     *
 	 * @return void
 	 */
 	public function testAddInvalidAlias(): void {
@@ -139,8 +140,6 @@ class CommentsControllerTest extends TestCase {
 	/**
 	 * Test add method with invalid model id throws RecordNotFoundException
 	 *
-	 * @uses \Comments\Controller\CommentsController::add()
-     *
 	 * @return void
 	 */
 	public function testAddInvalidModelId(): void {
@@ -161,8 +160,6 @@ class CommentsControllerTest extends TestCase {
 	/**
 	 * Test add method only allows POST/PUT/PATCH
 	 *
-	 * @uses \Comments\Controller\CommentsController::add()
-     *
 	 * @return void
 	 */
 	public function testAddGetNotAllowed(): void {
@@ -179,8 +176,6 @@ class CommentsControllerTest extends TestCase {
 	/**
 	 * Test add method with empty content shows error
 	 *
-	 * @uses \Comments\Controller\CommentsController::add()
-     *
 	 * @return void
 	 */
 	public function testAddEmptyContent(): void {
@@ -203,8 +198,6 @@ class CommentsControllerTest extends TestCase {
 	/**
 	 * Test add method with session user
 	 *
-	 * @uses \Comments\Controller\CommentsController::add()
-     *
 	 * @return void
 	 */
 	public function testAddWithSessionUser(): void {
@@ -220,7 +213,7 @@ class CommentsControllerTest extends TestCase {
 
 		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 1], $data);
 
-		$this->assertRedirect(['action' => 'index']);
+		$this->assertRedirect('/');
 
 		$comment = $this->fetchTable('Comments.Comments')->find()
 			->where(['content' => 'Comment from logged in user'])
@@ -232,8 +225,6 @@ class CommentsControllerTest extends TestCase {
 	/**
 	 * Test add method without user (anonymous)
 	 *
-	 * @uses \Comments\Controller\CommentsController::add()
-     *
 	 * @return void
 	 */
 	public function testAddAnonymous(): void {
@@ -248,8 +239,6 @@ class CommentsControllerTest extends TestCase {
 	}
 
 	/**
-	 * @uses \Comments\Controller\CommentsController::add()
-	 *
 	 * @return void
 	 */
 	public function testAddAnonymousAllowed(): void {
@@ -263,7 +252,7 @@ class CommentsControllerTest extends TestCase {
 			'comment' => 'Anonymous comment',
 		]);
 
-		$this->assertRedirect(['action' => 'index']);
+		$this->assertRedirect('/');
 
 		$comment = $this->fetchTable('Comments.Comments')->find()
 			->where(['content' => 'Anonymous comment'])
@@ -275,8 +264,6 @@ class CommentsControllerTest extends TestCase {
 	/**
 	 * Test add method with plugin model
 	 *
-	 * @uses \Comments\Controller\CommentsController::add()
-     *
 	 * @return void
 	 */
 	public function testAddWithPluginModel(): void {
@@ -298,8 +285,6 @@ class CommentsControllerTest extends TestCase {
 	/**
 	 * Test delete method
 	 *
-	 * @uses \Comments\Controller\CommentsController::delete()
-     *
 	 * @return void
 	 */
 	public function testDelete(): void {
@@ -313,14 +298,12 @@ class CommentsControllerTest extends TestCase {
 
 		$this->delete(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', $comment->id]);
 
-		$this->assertRedirect(['action' => 'index']);
+		$this->assertRedirect('/');
 	}
 
 	/**
 	 * Test delete method with POST and id in data
 	 *
-	 * @uses \Comments\Controller\CommentsController::delete()
-     *
 	 * @return void
 	 */
 	public function testDeleteWithDataId(): void {
@@ -334,7 +317,7 @@ class CommentsControllerTest extends TestCase {
 
 		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete'], ['id' => $comment->id]);
 
-		$this->assertRedirect(['action' => 'index']);
+		$this->assertRedirect('/');
 
 		$exists = $this->fetchTable('Comments.Comments')->exists(['id' => $comment->id]);
 		$this->assertFalse($exists);
@@ -343,8 +326,6 @@ class CommentsControllerTest extends TestCase {
 	/**
 	 * Test delete method with invalid id throws RecordNotFoundException
 	 *
-	 * @uses \Comments\Controller\CommentsController::delete()
-     *
 	 * @return void
 	 */
 	public function testDeleteInvalidId(): void {
@@ -359,8 +340,6 @@ class CommentsControllerTest extends TestCase {
 	/**
 	 * Test delete method only allows POST/DELETE
 	 *
-	 * @uses \Comments\Controller\CommentsController::delete()
-     *
 	 * @return void
 	 */
 	public function testDeleteGetNotAllowed(): void {
@@ -380,8 +359,6 @@ class CommentsControllerTest extends TestCase {
 	}
 
 	/**
-	 * @uses \Comments\Controller\CommentsController::delete()
-	 *
 	 * @return void
 	 */
 	public function testDeleteForbiddenForOtherUser(): void {
@@ -401,8 +378,6 @@ class CommentsControllerTest extends TestCase {
 	}
 
 	/**
-	 * @uses \Comments\Controller\CommentsController::delete()
-	 *
 	 * @return void
 	 */
 	public function testDeleteAllowedForAdminAccessGate(): void {
@@ -413,15 +388,13 @@ class CommentsControllerTest extends TestCase {
 
 		$this->delete(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', $comment->id]);
 
-		$this->assertRedirect(['action' => 'index']);
+		$this->assertRedirect('/');
 		$this->assertFalse($this->fetchTable('Comments.Comments')->exists(['id' => $comment->id]));
 	}
 
 	/**
 	 * Test add method with custom userIdField
 	 *
-	 * @uses \Comments\Controller\CommentsController::add()
-     *
 	 * @return void
 	 */
 	public function testAddWithCustomUserIdField(): void {
@@ -438,7 +411,7 @@ class CommentsControllerTest extends TestCase {
 
 		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 1], $data);
 
-		$this->assertRedirect(['action' => 'index']);
+		$this->assertRedirect('/');
 
 		$comment = $this->fetchTable('Comments.Comments')->find()
 			->where(['content' => 'Comment with custom userIdField'])
@@ -447,6 +420,64 @@ class CommentsControllerTest extends TestCase {
 		$this->assertSame(1, $comment->user_id);
 
 		Configure::delete('Comments.userIdField');
+	}
+
+	public function testAddUsesRequestIdentityBeforeLegacySession(): void {
+		Configure::write('Comments.controllerModels.Posts', 'Posts');
+		$this->session(['Auth.User.id' => 999]);
+		Configure::write('Comments.testHostBeforeFilter', static function ($event): void {
+			$controller = $event->getSubject();
+			$controller->setRequest($controller->getRequest()->withAttribute('identity', new Entity(['id' => 1])));
+		});
+
+		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 1], ['content' => 'Request identity']);
+
+		$this->assertRedirect();
+		$comment = $this->fetchTable('Comments.Comments')->find()->where(['content' => 'Request identity'])->firstOrFail();
+		$this->assertSame(1, $comment->user_id);
+	}
+
+	public function testAddUsesIdentifierForNonArrayIdentity(): void {
+		Configure::write('Comments.controllerModels.Posts', 'Posts');
+		Configure::write('Comments.testHostBeforeFilter', static function ($event): void {
+			$identity = new class {
+				public function getIdentifier(): int {
+					return 1;
+				}
+			};
+			$controller = $event->getSubject();
+			$controller->setRequest($controller->getRequest()->withAttribute('identity', $identity));
+		});
+
+		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Posts', 1], ['content' => 'Identifier identity']);
+
+		$this->assertRedirect();
+		$comment = $this->fetchTable('Comments.Comments')->find()->where(['content' => 'Identifier identity'])->firstOrFail();
+		$this->assertSame(1, $comment->user_id);
+	}
+
+	public function testAddStoresActualTableAliasForMappedUrlAlias(): void {
+		Configure::write('Comments.controllerModels.Article', 'Posts');
+		$this->session(['Auth.User.id' => 1]);
+
+		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'add', 'Article', 1], ['content' => 'Mapped URL alias']);
+
+		$this->assertRedirect();
+		$comment = $this->fetchTable('Comments.Comments')->find()->where(['content' => 'Mapped URL alias'])->firstOrFail();
+		$this->assertSame('Posts', $comment->model);
+	}
+
+	public function testOwnerDeleteAcceptsStringIdentityIdentifier(): void {
+		$comment = $this->makeComment(['foreign_key' => 1, 'model' => 'Posts', 'user_id' => 1, 'content' => 'Owned']);
+		Configure::write('Comments.testHostBeforeFilter', static function ($event): void {
+			$controller = $event->getSubject();
+			$controller->setRequest($controller->getRequest()->withAttribute('identity', new Entity(['id' => '1'])));
+		});
+
+		$this->post(['plugin' => 'Comments', 'controller' => 'Comments', 'action' => 'delete', $comment->id]);
+
+		$this->assertRedirect();
+		$this->assertFalse($this->fetchTable('Comments.Comments')->exists(['id' => $comment->id]));
 	}
 
 }

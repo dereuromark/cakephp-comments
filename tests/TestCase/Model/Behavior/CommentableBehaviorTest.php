@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Comments\Test\TestCase\Model\Behavior;
 
 use Cake\Core\Configure;
+use Cake\Http\Exception\MethodNotAllowedException;
 use Cake\ORM\Table;
 use Cake\TestSuite\TestCase;
 use Comments\Model\Behavior\CommentableBehavior;
@@ -472,6 +473,24 @@ class CommentableBehaviorTest extends TestCase {
 
 		$query = $this->Posts->find('threaded', parentField: 'parent_id');
 		$this->assertNotNull($query);
+	}
+
+	public function testCommentAddRejectsParentFromDifferentModelWithSameRecordId(): void {
+		$parentId = $this->Commentable->commentAdd(null, [
+			'userId' => 1,
+			'modelId' => 1,
+			'model' => 'Posts',
+			'data' => ['content' => 'Parent on Posts'],
+		]);
+		$this->assertNotNull($parentId);
+		$this->expectException(MethodNotAllowedException::class);
+
+		$this->Commentable->commentAdd($parentId, [
+			'userId' => 1,
+			'modelId' => 1,
+			'model' => 'Articles',
+			'data' => ['content' => 'Reply on another model'],
+		]);
 	}
 
 }

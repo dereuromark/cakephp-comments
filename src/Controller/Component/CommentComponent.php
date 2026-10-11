@@ -1,47 +1,14 @@
 <?php
 
-/**
- * CommentsComponent
- *
- * Helps handle 'view' action of controller so it can list/add related comments.
- * In related controller action there is no need to fetch associated data for comments - this
- * component is fetching them separately (needed different result from model in dependency of
- * used displayType).
- *
- * Needs Router::connectNamed(array('comment', 'comment_view', 'comment_action)) in config/routes.php.
- *
- * It is also usable to define (in controller, to not fetch unnecessary data
- * in used Controller::paginate() method):
- * var $paginate = array('Comment' => array(
- *  'order' => array('Comment.created' => 'desc'),
- *  'recursive' => 0,
- *  'limit' => 10
- * ));
- *
- * Includes helpers TextWidget and CommentWidget for controller, uses method
- * AppController::blackHole().
- *
- * Most of component methods possible to override in controller
- * for it need to create method with prefix _comments
- * Ex. : _add -> _commentsAdd, _fetchData -> _commentsFetchData
- * Callbacks also need to prefix with '_comments' in controller.
- *
- * callbacks
- * afterAdd
- *
- * params
- *  comment
- *  comment_view_type
- *  comment_action
- */
-
 namespace Comments\Controller\Component;
 
+use ArrayAccess;
 use BadMethodCallException;
 use Cake\Controller\Component;
 use Cake\Core\Configure;
 use Cake\Datasource\Paging\PaginatedInterface;
 use Cake\Event\EventInterface;
+use Cake\Http\Exception\ForbiddenException;
 use Cake\Routing\Router;
 use Cake\Utility\Inflector;
 use RuntimeException;
@@ -214,36 +181,14 @@ class CommentComponent extends Component {
 
 		$parts = explode('\\', (string)$model->getEntityClass());
 		$entityName = Inflector::classify(Inflector::underscore(array_pop($parts)));
-		$this->viewVariable = Inflector::variable($entityName);
-		//$this->Controller->helpers = array_merge($this->Controller->helpers, ['Comments.CommentWidget', 'Time', 'Comments.Cleaner', 'Comments.Tree']);
-		if (!$this->Controller->{$this->modelAlias}->behaviors()->has('Commentable')) {
+		$this->viewVariable = $this->getConfig('viewVariable') ?? Inflector::variable($entityName);
+		if (!$model->hasBehavior('Commentable')) {
 			$config = [
 				'userModelClass' => $this->getConfig('userModelClass'),
 				'userId' => $this->userId(),
 			];
-			$this->Controller->{$this->modelAlias}->behaviors()->load('Comments.Commentable', $config);
+			$model->addBehavior('Comments.Commentable', $config);
 		}
-
-		/*
-        $this->Auth = $this->Controller->Auth;
-        if (!empty($this->Auth) && $this->Auth->user()) {
-            $this->Controller->set('isAuthorized', ($this->Auth->user('id') != ''));
-        }
-        */
-
-		/*
-        if (in_array($this->Controller->action, $this->deleteActions)) {
-            $this->Controller->{$this->modelAlias}->{$this->assocName}->softDelete(false);
-        } elseif ($this->unbindAssoc) {
-            foreach (['hasMany', 'hasOne'] as $assocType) {
-                if (array_key_exists($this->assocName, $this->Controller->{$this->modelAlias}->{$assocType})) {
-                    $this->Controller->{$this->modelAlias}->unbindModel([$assocType => [$this->assocName]], false);
-
-                    break;
-                }
-            }
-        }
-        */
 
 		if (!$this->Controller->getRequest()->is(['post', 'put', 'patch'])) {
 			return;
@@ -296,7 +241,7 @@ class CommentComponent extends Component {
 	 */
 	protected function process() {
 		$data = $this->Controller->getRequest()->getData();
-		if (empty($data['comment'])) {
+		if (!array_key_exists('comment', $data) && !array_key_exists('content', $data)) {
 			return null;
 		}
 
@@ -317,10 +262,15 @@ class CommentComponent extends Component {
 			throw new RuntimeException('Entity missing for commenting');
 		}
 
+		$userId = $this->userId();
+		if ($userId === null && !$this->getConfig('allowAnonymous')) {
+			throw new ForbiddenException(__d('comments', 'Anonymous comments are disabled.'));
+		}
+
 		$modelId = $this->getConfig('useEntity') ? $entity->get('id') : ($data['id'] ?? null);
 
 		$options = [
-			'userId' => $this->userId(),
+			'userId' => $userId,
 			'modelId' => $modelId,
 			'model' => $this->modelAlias,
 			'data' => $data,
@@ -329,9 +279,11 @@ class CommentComponent extends Component {
 
 		// Parent comment id
 		$commentId = $data['parent_id'] ?? null;
-		/** @var \Comments\Model\Behavior\CommentableBehavior $table */
-		$table = $this->Controller->{$this->modelAlias};
-		$result = $table->commentAdd($commentId, $options);
+		/** @var \Cake\ORM\Table $table */
+		$table = $this->Controller->fetchTable();
+		/** @var \Comments\Model\Behavior\CommentableBehavior $behavior */
+		$behavior = $table->getBehavior('Commentable');
+		$result = $behavior->commentAdd($commentId, $options);
 		if ($result) {
 			return $this->prgRedirect();
 		}
@@ -344,6 +296,13 @@ class CommentComponent extends Component {
 	 */
 	protected function userId() {
 		$userId = $this->getConfig('userId') ?: null;
+		$identity = $this->Controller->getRequest()->getAttribute('identity');
+		if ($userId === null && $identity instanceof ArrayAccess && isset($identity[$this->getConfig('userIdField')])) {
+			return $identity[$this->getConfig('userIdField')];
+		}
+		if ($userId === null && is_object($identity) && method_exists($identity, 'getIdentifier')) {
+			return $identity->getIdentifier();
+		}
 		if (!$userId && $this->Controller->components()->has('AuthUser')) {
 			$authUser = $this->Controller->components()->get('AuthUser');
 			if (method_exists($authUser, 'user')) {
@@ -368,31 +327,6 @@ class CommentComponent extends Component {
 	 * @return string Type of comment display
 	 */
 	public function callbackInitType() {
-		$types = ['flat', 'threaded', 'tree'];
-		$param = 'Comments.' . $this->modelAlias;
-		//dd($this->Controller->viewBuilder()->getVars());
-		/*
-        if (!empty($this->Controller->passedArgs['comment_view_type'])) {
-            $type = $this->Controller->passedArgs['comment_view_type'];
-            if (in_array($type, $types)) {
-                $this->Cookie->write($param, $type, true, '+2 weeks');
-
-                return $type;
-            }
-        }
-        */
-
-		/*
-		if ($this->Controller->getRequest()->getCookieCollection()->has($param)) {
-			$type = $this->Controller->getRequest()->getCookieCollection()->get($param);
-			if (in_array($type, $types)) {
-				return $type;
-			}
-
-			$this->Controller->getRequest()->getCookieCollection()->remove('Comments');
-		}
-		*/
-
 		return 'flat';
 	}
 
@@ -408,7 +342,7 @@ class CommentComponent extends Component {
 	 */
 	public function callbackView(string $displayType, bool $processActions = true) {
 		/** @var \Cake\ORM\Table $table */
-		$table = $this->Controller->{$this->modelAlias};
+		$table = $this->Controller->fetchTable();
 		if (
 			!$table->hasAssociation($this->assocName)
 		) {
@@ -446,15 +380,13 @@ class CommentComponent extends Component {
 	 * @return \Cake\Datasource\Paging\PaginatedInterface
 	 */
 	public function callbackFetchDataFlat(array $options): PaginatedInterface {
-		$paginate = []; //$this->_prepareModel($options);
-
-		//$overloadPaginate = !empty($this->Controller->paginate['Comment']) ? $this->Controller->paginate['Comment'] : [];
-		//$this->Controller->Paginator->settings['Comment'] = array_merge($paginate, $overloadPaginate);
-
 		/** @var \Comments\Model\Table\CommentsTable $relation */
-		$relation = $this->Controller->{$this->modelAlias}->Comments->getTarget();
+		$relation = $this->Controller->fetchTable()->getAssociation('Comments')->getTarget();
 
-		return $this->Controller->paginate($relation);
+		return $this->Controller->paginate($relation->find()->where([
+			$relation->aliasField('model') => $this->modelAlias,
+			$relation->aliasField('foreign_key') => $options['id'],
+		]));
 	}
 
 	/**
@@ -468,27 +400,18 @@ class CommentComponent extends Component {
 			'modelName' => $this->modelAlias,
 			'userModel' => $this->userModel,
 		] + $this->commentParams;
-
-		$allowedParams = ['comment', 'comment_action', 'quote'];
-		foreach ($allowedParams as $param) {
-			/*
-            if (isset($this->Controller->passedArgs[$param])) {
-                $this->commentParams[$param] = $this->Controller->passedArgs[$param];
-            }
-            */
-		}
 	}
 
 	/**
-	 * Flash message - for ajax queries, sets 'messageTxt' view variable,
-	 * otherwise uses the Session component and values from CommentsComponent::$flash.
+	 * For AJAX requests, set the messageTxt view variable.
+	 * Otherwise use the controller's Flash component.
 	 *
 	 * @param string $message The message to set.
 	 *
 	 * @return void
 	 */
 	public function flash($message) {
-		$isAjax = $this->Controller->params['isAjax'] ?? false;
+		$isAjax = $this->Controller->getRequest()->getParam('isAjax') ?? $this->Controller->getRequest()->is('ajax');
 		if ($isAjax) {
 			$this->Controller->set('messageTxt', $message);
 		} else {
@@ -508,12 +431,16 @@ class CommentComponent extends Component {
 	 * @return \Cake\Http\Response|null|void
 	 */
 	public function prgRedirect(array $urlBase = []) {
-		$isAjax = $this->Controller->getRequest()->getParam('isAjax') ?? false;
+		$isAjax = $this->Controller->getRequest()->getParam('isAjax') ?? $this->Controller->getRequest()->is('ajax');
 
-		$url = array_merge(
-			array_diff_key($this->Controller->getRequest()->getParam('pass'), array_flip($this->_supportNamedParams)),
-			$urlBase,
-		);
+		$request = $this->Controller->getRequest();
+		$url = array_replace([
+			'plugin' => $request->getParam('plugin'),
+			'prefix' => $request->getParam('prefix'),
+			'controller' => $request->getParam('controller'),
+			'action' => $request->getParam('action'),
+		] + (array)$request->getParam('pass'), $urlBase);
+
 		if (!$isAjax) {
 			return $this->Controller->redirect($url);
 		}

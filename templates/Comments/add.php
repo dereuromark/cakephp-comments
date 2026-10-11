@@ -19,15 +19,15 @@
             <fieldset>
                 <legend><?= __d('comments', 'Add Comment') ?></legend>
                 <?php
-                    echo $this->Form->control('foreign_key');
-                    echo $this->Form->control('model');
-                    echo $this->Form->control('user_id', ['options' => $users, 'empty' => true]);
-                    echo $this->Form->control('name');
-                    echo $this->Form->control('email');
-                    echo $this->Form->control('content');
-                    echo $this->Form->control('is_private');
-                    echo $this->Form->control('is_spam');
-                ?>
+					echo $this->Form->control('foreign_key');
+					echo $this->Form->control('model');
+					echo $this->Form->control('user_id', ['options' => $users, 'empty' => true]);
+					echo $this->Form->control('name');
+					echo $this->Form->control('email');
+					echo $this->Form->control('content');
+					echo $this->Form->control('is_private');
+					echo $this->Form->control('is_spam');
+				?>
             </fieldset>
             <?= $this->Form->button(__d('comments', 'Submit')) ?>
             <?= $this->Form->end() ?>

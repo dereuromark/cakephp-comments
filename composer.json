@@ -1,6 +1,6 @@
 {
 	"name": "dereuromark/cakephp-comments",
-	"description": "A CakePHP plugin for adding threaded comments with moderation support",
+	"description": "A CakePHP plugin for adding and managing comments",
 	"type": "cakephp-plugin",
 	"keywords": [
 		"cakephp",
