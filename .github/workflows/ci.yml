@@ -160,9 +160,6 @@ jobs:
       - name: Composer install
         run: composer install --no-progress --prefer-dist
 
-      - name: Composer i18n-lint setup
-        run: composer i18n-setup
-
       - name: Check POT is up to date
         run: composer i18n-check
 
