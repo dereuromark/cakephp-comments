@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Comments\Test\TestCase\Controller\Admin;
 
+use Cake\Controller\Component;
 use Cake\Core\Configure;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Event\Event;
@@ -206,7 +207,7 @@ class CommentsControllerTest extends TestCase {
 	}
 
 	#[DataProvider('hostResponseProvider')]
-	public function testHostResponseStopsListenersAndMarksAuthorization(bool $returned): void {
+	public function testHostResponseStopsListenersAndMarksAuthorization(bool $returned, bool $withComponent): void {
 		$authorization = new class {
 			public bool $checked = false;
 
@@ -226,6 +227,13 @@ class CommentsControllerTest extends TestCase {
 		});
 		$request = (new ServerRequest())->withAttribute('authorization', $authorization);
 		$controller = new CommentsController($request);
+		if ($withComponent) {
+			$controller->components()->set('Authorization', new class ($controller->components(), ['authorization' => $authorization]) extends Component {
+				public function skipAuthorization(): void {
+					$this->getConfig('authorization')->skipAuthorization();
+				}
+			});
+		}
 		$manager = $controller->getEventManager();
 		$manager->on('Controller.initialize', ['priority' => 100], static function (): never {
 			throw new RuntimeException('A later listener must not run');
@@ -243,7 +251,29 @@ class CommentsControllerTest extends TestCase {
 	 * @return array<string, array<bool>>
 	 */
 	public static function hostResponseProvider(): array {
-		return ['returned' => [true], 'event result' => [false]];
+		return [
+			'returned with service' => [true, false],
+			'event result with service' => [false, false],
+			'returned with component' => [true, true],
+			'event result with component' => [false, true],
+		];
+	}
+
+	public function testLoadedAuthorizationComponentWithoutRequestServicePreservesHostRedirect(): void {
+		Configure::delete('Comments.adminAccess');
+		Configure::write('Comments.testHostBeforeFilter', fn () => (new Response())->withStatus(302)->withHeader('Location', '/login'));
+		$controller = new CommentsController(new ServerRequest());
+		$controller->components()->set('Authorization', new class ($controller->components()) extends Component {
+			public function skipAuthorization(): never {
+				throw new RuntimeException('No Authorization middleware on this route');
+			}
+		});
+		$event = new Event('Controller.initialize', $controller);
+
+		$controller->getEventManager()->dispatch($event);
+
+		$this->assertInstanceOf(Response::class, $event->getResult());
+		$this->assertSame('/login', $event->getResult()->getHeaderLine('Location'));
 	}
 
 }

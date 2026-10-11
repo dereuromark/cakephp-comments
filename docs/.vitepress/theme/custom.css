@@ -11,6 +11,7 @@
 }
 
 .dark {
+  --vp-home-hero-name-background: linear-gradient(135deg, #5eead4 0%, #7dd3fc 100%);
   --vp-c-brand-1: #5eead4;
   --vp-c-brand-2: #2dd4bf;
   --vp-c-brand-3: #0f766e;

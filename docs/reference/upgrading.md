@@ -6,7 +6,7 @@ Check [composer.json](https://github.com/dereuromark/cakephp-comments/blob/maste
 
 These changes belong to the development branch until a release includes them:
 
-- The component enforces `allowAnonymous`, accepts either `comment` or `content`, and scopes flat lists to the current model and record.
+- The component enforces `allowAnonymous`, accepts either `comment` or `content` on POST/PUT/PATCH requests, and scopes flat lists to the current model and record.
 - The component honors `viewVariable` and redirects successful submissions to the current route and passed arguments.
 - Public submissions and deletions fall back to the application home page when no local referer is available.
 - Request identities are read before legacy auth and session fallbacks. Integer and string representations of the same user ID compare correctly for owner deletion.
