@@ -3,7 +3,7 @@
  * @var \App\View\AppView $this
  * @var \Comments\Model\Entity\Comment $comment
  */
-$cspNonce = (string)$this->getRequest()->getAttribute('cspNonce', '');
+$cspNonce = (string)($this->getRequest()->getAttribute('cspScriptNonce') ?? $this->getRequest()->getAttribute('cspNonce', ''));
 ?>
 <div class="row">
     <aside class="column actions large-3 medium-4 col-sm-4 col-xs-12">
