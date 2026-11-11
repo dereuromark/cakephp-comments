@@ -5,7 +5,7 @@
  * @var \Cake\Collection\CollectionInterface|string[] $parentComments
  * @var \Cake\Collection\CollectionInterface|string[] $users
  */
-$cspNonce = (string)$this->getRequest()->getAttribute('cspNonce', '');
+$cspNonce = (string)($this->getRequest()->getAttribute('cspScriptNonce') ?? $this->getRequest()->getAttribute('cspNonce', ''));
 ?>
 <div class="row">
     <aside class="column large-3 medium-4 columns col-sm-4 col-12">

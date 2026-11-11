@@ -7,9 +7,12 @@ use Cake\Controller\Component;
 use Cake\Core\Configure;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Event\Event;
+use Cake\Event\EventInterface;
+use Cake\Event\EventManager;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\MethodNotAllowedException;
 use Cake\Http\Exception\NotFoundException;
+use Cake\Http\MiddlewareQueue;
 use Cake\Http\Response;
 use Cake\Http\ServerRequest;
 use Cake\TestSuite\IntegrationTestTrait;
@@ -18,6 +21,9 @@ use Comments\Controller\Admin\CommentsController;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesMethod;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use RuntimeException;
 
 /**
@@ -289,6 +295,71 @@ class CommentsControllerTest extends TestCase {
 		$this->assertFlashMessage('Delete replies before deleting this comment.');
 		$this->assertTrue($comments->exists(['id' => $parent->id]));
 		$this->assertSame($parent->id, $comments->get($reply->id)->parent_id);
+	}
+
+	/**
+	 * CakePHP's CspMiddleware stores the nonce as `cspScriptNonce`.
+	 *
+	 * @param string $action
+	 *
+	 * @return void
+	 */
+	#[DataProvider('cspActionProvider')]
+	public function testCspScriptNonce(string $action): void {
+		$this->withRequestAttribute('cspScriptNonce', 'core-nonce');
+		$comment = $this->fetchTable('Comments.Comments')->find()->firstOrFail();
+		$url = ['prefix' => 'Admin', 'plugin' => 'Comments', 'controller' => 'Comments', 'action' => $action];
+		if ($action !== 'index') {
+			$url[] = $comment->id;
+		}
+
+		$this->get($url);
+
+		$this->assertResponseOk();
+		$this->assertResponseContains('<script nonce="core-nonce">');
+		$this->assertResponseNotRegExp('/<script(?![^>]*nonce=)/');
+	}
+
+	/**
+	 * @return array<string, array<string>>
+	 */
+	public static function cspActionProvider(): array {
+		return [
+			'index' => ['index'],
+			'view' => ['view'],
+			'edit' => ['edit'],
+		];
+	}
+
+	/**
+	 * A custom middleware may still provide the nonce as `cspNonce`.
+	 *
+	 * @return void
+	 */
+	public function testCspNonceFallback(): void {
+		$this->withRequestAttribute('cspNonce', 'custom-nonce');
+
+		$this->get('/admin/comments');
+
+		$this->assertResponseOk();
+		$this->assertResponseContains('<script nonce="custom-nonce">');
+		$this->assertResponseNotRegExp('/<script(?![^>]*nonce=)/');
+	}
+
+	/**
+	 * Adds a middleware that sets a request attribute, like a CSP middleware would.
+	 *
+	 * @param string $name
+	 * @param string $value
+	 *
+	 * @return void
+	 */
+	protected function withRequestAttribute(string $name, string $value): void {
+		EventManager::instance()->on('Server.buildMiddleware', function (EventInterface $event, MiddlewareQueue $queue) use ($name, $value): void {
+			$queue->prepend(function (ServerRequestInterface $request, RequestHandlerInterface $handler) use ($name, $value): ResponseInterface {
+				return $handler->handle($request->withAttribute($name, $value));
+			});
+		});
 	}
 
 }
